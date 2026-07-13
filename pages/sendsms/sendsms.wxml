@@ -1,0 +1,60 @@
+<view class="page sms-page safe-bottom">
+  <view class="page-header">
+    <text class="back-btn" bindtap="goBack">‹</text>
+    <text class="page-title">发送短信</text>
+  </view>
+
+  <!-- 收件人信息 -->
+  <view class="section-title">收件人信息</view>
+  <view class="card receiver-card">
+    <view class="receiver-info">
+      <view class="receiver-avatar">{{order.patient[0]}}</view>
+      <view class="receiver-detail">
+        <view class="receiver-name">{{order.patient}}</view>
+        <view class="receiver-phone">{{order.phone}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 短信模板 -->
+  <view class="section-title">选择短信模板</view>
+  <view class="card template-card">
+    <view class="template-list">
+      <view
+        class="template-item {{selectedTemplate === item.id ? 'active' : ''}}"
+        wx:for="{{templates}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="selectTemplate"
+      >
+        <view class="template-radio">
+          <view class="radio-dot" wx:if="{{selectedTemplate === item.id}}"></view>
+        </view>
+        <view class="template-content">
+          <view class="template-name">{{item.name}}</view>
+          <view class="template-preview">{{item.preview}}</view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 短信内容 -->
+  <view class="section-title">短信内容</view>
+  <view class="card content-card">
+    <textarea
+      class="sms-content"
+      placeholder="请输入短信内容"
+      value="{{smsContent}}"
+      bindinput="onContentInput"
+      maxlength="500"
+    ></textarea>
+    <view class="content-count">{{smsContent.length}}/500</view>
+  </view>
+
+  <!-- 发送按钮 -->
+  <view class="submit-wrap">
+    <view class="btn-primary {{smsContent.length === 0 ? 'disabled' : ''}}" bindtap="sendSms">
+      {{sending ? '发送中...' : '发送短信'}}
+    </view>
+  </view>
+</view>

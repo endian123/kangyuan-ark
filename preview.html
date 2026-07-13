@@ -250,6 +250,10 @@
     /* Page nav header */
     .page-nav { height: 44px; display: flex; align-items: center; justify-content: center; background: #fff; font-size: 17px; font-weight: 600; position: relative; }
     .page-nav-back { position: absolute; left: 12px; font-size: 22px; color: #999; cursor: pointer; padding: 6px 12px; }
+  .od-status { font-weight: 600; }
+  .od-status.wait { color: #F59E0B; }
+  .od-status.running { color: #10B981; }
+  .od-status.done { color: #999; }
   /* 星期选择芯片 */
   .weekday-chip{width:36px;height:36px;line-height:36px;text-align:center;border-radius:50%;font-size:13px;font-weight:600;color:#999;background:#f5f5f5;cursor:pointer;transition:all .15s;user-select:none;flex-shrink:0}
   .weekday-chip.active{background:#10B981;color:#fff;box-shadow:0 2px 6px rgba(16,185,129,0.3)}
@@ -566,40 +570,114 @@
       </div>
 
       <!-- 服务过程记录页 -->
+      <!-- 订单详情页 -->
+      <div id="page-orderdetail" class="hidden">
+        <div class="page-nav">
+          <span class="page-nav-back" onclick="showPage('service')">&lsaquo;</span>
+          订单详情 <span id="od-title-id" style="font-size:12px;color:#999;margin-left:4px"></span>
+        </div>
+        <!-- 服务信息 -->
+        <div class="card" style="margin:8px 12px;padding:12px 14px">
+          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:10px">服务信息</div>
+          <div style="display:flex;gap:6px;margin-bottom:6px"><span style="font-size:13px;color:#999;min-width:70px">服务状态</span><span id="od-status" class="od-status wait" style="font-size:13px;font-weight:600">待服务</span></div>
+          <div style="display:flex;gap:6px;margin-bottom:6px"><span style="font-size:13px;color:#999;min-width:70px">服务类型</span><span id="od-service-type" style="font-size:13px">-</span></div>
+          <div style="display:flex;gap:6px;margin-bottom:6px"><span style="font-size:13px;color:#999;min-width:70px">服务时间</span><span id="od-service-time" style="font-size:13px">-</span></div>
+          <div style="display:flex;gap:6px;margin-bottom:6px"><span style="font-size:13px;color:#999;min-width:70px">医院名称</span><span id="od-hospital" style="font-size:13px">-</span></div>
+          <div style="display:flex;gap:6px;margin-bottom:6px"><span style="font-size:13px;color:#999;min-width:70px">科室</span><span id="od-dept" style="font-size:13px">-</span></div>
+          <div style="display:flex;gap:6px"><span style="font-size:13px;color:#999;min-width:70px">订单备注</span><span id="od-remark" style="font-size:13px">-</span></div>
+        </div>
+        <!-- 就诊人信息 -->
+        <div class="card" style="margin:8px 12px;padding:12px 14px">
+          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:10px">就诊人信息</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px">
+            <div><span style="font-size:13px;color:#999">姓名</span><br><span id="od-name" style="font-size:13px">-</span></div>
+            <div><span style="font-size:13px;color:#999">性别</span><br><span id="od-gender" style="font-size:13px">-</span></div>
+            <div><span style="font-size:13px;color:#999">年龄</span><br><span id="od-age" style="font-size:13px">-</span></div>
+            <div><span style="font-size:13px;color:#999">身份证号</span><br><span id="od-idcard" style="font-size:13px">-</span></div>
+          </div>
+          <div style="margin-top:6px"><span style="font-size:13px;color:#999">既往病史</span><br><span id="od-history" style="font-size:13px">-</span></div>
+        </div>
+        <!-- 联系方式 -->
+        <div class="card" style="margin:8px 12px;padding:12px 14px;margin-bottom:16px">
+          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:10px">联系方式</div>
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div><span style="font-size:13px;color:#999">就诊人手机</span><br><span id="od-phone" style="font-size:13px">-</span></div>
+            <div style="display:flex;gap:6px">
+              <div class="btn-plain btn-sm" onclick="showToast('拨打电话')">电话</div>
+              <div class="btn-ghost btn-sm" onclick="goSendSms(document.getElementById('od-name').innerText, document.getElementById('od-phone').innerText)">短信</div>
+            </div>
+          </div>
+        </div>
+        <!-- 操作按钮 -->
+        <div style="margin:0 12px 24px">
+          <div class="btn-primary" onclick="openServiceRecord(currentOrderId)">服务回填</div>
+        </div>
+      </div>
+
+      <!-- 服务回填页 -->
       <div id="page-servicerecord" class="hidden">
-        <div class="sr-header">
-          <span class="sr-back" onclick="showPage('service')">&lsaquo;</span>
-          <span class="sr-title">服务过程记录</span>
-          <span style="font-size:14px;opacity:0.85" id="sr-order-id"></span>
+        <div class="page-nav">
+          <span class="page-nav-back" onclick="showPage('orderdetail')">&lsaquo;</span>
+          服务回填
         </div>
-        <!-- 计时器 -->
-        <div class="sr-timer-box">
-          <div class="sr-timer" id="sr-timer">00:00:00</div>
-          <div class="sr-timer-label">服务已进行时长</div>
+        <!-- 回填表单 -->
+        <div class="card" style="margin:8px 12px;padding:12px 14px">
+          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:12px">服务信息回填</div>
+          <!-- 服务状态 -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:13px;color:#999;margin-bottom:6px">服务状态</div>
+            <select id="sr-status" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:#fff">
+              <option value="进行中">进行中</option>
+              <option value="已完成">已完成</option>
+              <option value="异常终止">异常终止</option>
+            </select>
+          </div>
+          <!-- 服务专家 -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:13px;color:#999;margin-bottom:6px">服务专家</div>
+            <input type="text" id="sr-expert" placeholder="请输入服务专家姓名" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px">
+          </div>
+          <!-- 疾病名称 -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:13px;color:#999;margin-bottom:6px">疾病名称</div>
+            <input type="text" id="sr-disease" placeholder="请输入疾病名称" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px">
+          </div>
+          <!-- 当日检查情况 -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:13px;color:#999;margin-bottom:6px">当日检查情况</div>
+            <textarea id="sr-checkup" rows="3" placeholder="请描述当日检查项目及结果" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;resize:none"></textarea>
+          </div>
+          <!-- 医生建议 -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:13px;color:#999;margin-bottom:6px">医生建议</div>
+            <textarea id="sr-advice" rows="3" placeholder="请输入医生给出的诊疗建议" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;resize:none"></textarea>
+          </div>
+          <!-- 服务备注 -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:13px;color:#999;margin-bottom:6px">服务备注 <span style="color:#ccc">（选填）</span></div>
+            <textarea id="sr-note" rows="2" maxlength="500" placeholder="其他需要备注的信息" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;resize:none"></textarea>
+          </div>
+          <!-- 上传凭证 -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:13px;color:#999;margin-bottom:6px">上传凭证 <span style="color:#ccc">（最多5张）</span></div>
+            <div id="sr-images" style="display:flex;flex-wrap:wrap;gap:8px">
+              <div style="width:72px;height:72px;border:1.5px dashed #d1d5db;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer" onclick="addSrImage(this)">
+                <span style="font-size:24px;color:#ccc">+</span><span style="font-size:10px;color:#999">上传</span>
+              </div>
+            </div>
+          </div>
+          <!-- 客户签字 -->
+          <div style="margin-bottom:12px">
+            <div style="font-size:13px;color:#999;margin-bottom:6px">客户签字</div>
+            <div id="sr-sign-area" style="width:100%;height:120px;border:1.5px dashed #d1d5db;border-radius:8px;background:#fafafa;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden" onclick="signPad(this)">
+              <span style="font-size:13px;color:#bbb">点击此处签字</span>
+            </div>
+          </div>
         </div>
-        <!-- 记录列表 -->
-        <div class="sr-section-title">
-          <span>服务记录</span>
-          <div class="sr-add-btn" onclick="addServiceEntry()">+</div>
-        </div>
-        <div id="sr-entries"></div>
-        <!-- 文本输入 -->
-        <div class="sr-textarea-box">
-          <textarea class="sr-textarea" id="sr-input" maxlength="500" placeholder="请输入服务记录内容..."></textarea>
-          <div class="sr-char-count"><span id="sr-char-count">0</span>/500</div>
-        </div>
-        <!-- 图片上传 -->
-        <div class="sr-section-title">
-          <span>现场照片 <span style="font-size:12px;color:#999;font-weight:400">（最多5张）</span></span>
-        </div>
-        <div class="sr-images" id="sr-images">
-          <div class="upload-box" onclick="addServiceImage(this)"><span class="upload-plus">+</span><span>上传照片</span></div>
-        </div>
-        <!-- 自动保存 -->
-        <div class="sr-auto-save">草稿已自动保存</div>
         <!-- 底部按钮 -->
-        <div style="margin:16px 12px">
-          <div class="btn-primary" onclick="saveServiceRecord()">保存记录</div>
+        <div style="margin:0 12px 24px;display:flex;gap:8px">
+          <div class="btn-plain" style="flex:1" onclick="saveServiceRecord(true)">保存</div>
+          <div class="btn-primary" style="flex:1" onclick="saveServiceRecord(false)">回填提交</div>
         </div>
       </div>
 
@@ -759,9 +837,9 @@
 
   <script>
     const orders = [
-      { id:'WO20260710001', status:'wait', text:'待服务', tag:'tag-wait', patient:'张阿姨', phone:'138****1234', hospital:'协和医院', dept:'心内科', date:'2026-07-10 08:30', service:'全程陪诊', price:'¥280' },
-      { id:'WO20260710002', status:'running', text:'服务中', tag:'tag-running', patient:'李大爷', phone:'139****5678', hospital:'协和医院', dept:'骨科', date:'2026-07-10 09:00', service:'取药陪诊', price:'¥180' },
-      { id:'WO20260710003', status:'done', text:'服务完成', tag:'tag-done', patient:'王先生', phone:'137****9012', hospital:'同仁医院', dept:'眼科', date:'2026-07-09 14:00', service:'检查陪诊', price:'¥220' }
+      { id:'WO20260710001', status:'wait', text:'待服务', tag:'tag-wait', patient:'张阿姨', phone:'138****1234', hospital:'协和医院', dept:'心内科', date:'2026-07-10 08:30', service:'全程陪诊', price:'¥280', gender:'女', age:'62', idcard:'3101**********0034', history:'高血压病史3年，长期服用降压药', emergency:'张先生 138****5678', remark:'老人腿脚不便，需轮椅' },
+      { id:'WO20260710002', status:'running', text:'服务中', tag:'tag-running', patient:'李大爷', phone:'139****5678', hospital:'协和医院', dept:'骨科', date:'2026-07-10 09:00', service:'取药陪诊', price:'¥180', gender:'男', age:'68', idcard:'1101**********0078', history:'糖尿病2型，长期服药', emergency:'李女士 139****4321', remark:'需取上月检查报告' },
+      { id:'WO20260710003', status:'done', text:'服务完成', tag:'tag-done', patient:'王先生', phone:'137****9012', hospital:'同仁医院', dept:'眼科', date:'2026-07-09 14:00', service:'检查陪诊', price:'¥220', gender:'男', age:'45', idcard:'3101**********0012', history:'近视术后复查', emergency:'王女士 137****1111', remark:'无' }
     ];
 
     const hospitals = [
@@ -857,25 +935,48 @@
       const list = document.getElementById('order-list');
       const filtered = currentTab === 3 ? orders : orders.filter(o => o.status === ['wait','running','done'][currentTab]);
       list.innerHTML = filtered.map(o => `
-        <div class="card order-card">
+        <div class="card order-card" onclick="goOrderDetail('${o.id}')">
           <div class="order-head"><span class="order-id">${o.id}</span><span class="tag ${o.tag}">${o.text}</span></div>
           <div class="patient-row"><span class="patient-name">${o.patient}</span><span class="patient-phone">${o.phone}</span></div>
           <div class="info-row"><span class="info-label">就诊医院</span><span class="info-value">${o.hospital} &middot; ${o.dept}</span></div>
           <div class="info-row"><span class="info-label">预约时间</span><span class="info-value">${o.date}</span></div>
           <div class="info-row"><span class="info-label">服务类型</span><span class="info-value">${o.service}</span></div>
           <div class="divider"></div>
-          <div class="action-row">
-            ${o.status==='wait' ? `<div class="btn-plain btn-sm" onclick="showToast('订单详情')">订单详情</div><div class="btn-plain btn-sm" onclick="showToast('拨打电话')">电话联系</div><div class="btn-plain btn-sm" onclick="goSendSms('${o.patient}','${o.phone}')">发送短信</div><div class="btn-primary btn-sm" onclick="startService('${o.id}')">开始服务</div>` : ''}
+          <div class="action-row" onclick="event.stopPropagation()">
+            ${o.status==='wait' ? `<div class="btn-plain btn-sm" onclick="showToast('拨打电话')">电话联系</div><div class="btn-plain btn-sm" onclick="goSendSms('${o.patient}','${o.phone}')">发送短信</div><div class="btn-primary btn-sm" onclick="startService('${o.id}')">开始服务</div>` : ''}
             ${o.status==='running' ? `<div class="btn-plain btn-sm" onclick="showToast('拨打电话')">电话联系</div><div class="btn-ghost btn-sm" onclick="goSendSms('${o.patient}','${o.phone}')">发送短信</div><div class="btn-plain btn-sm" onclick="openServiceRecord('${o.id}')">服务回填</div><div class="btn-primary btn-sm" onclick="endService('${o.id}')">结束服务</div>` : ''}
-            ${o.status==='done' ? `<div class="btn-plain btn-sm" onclick="showToast('查看详情')">查看详情</div><div class="btn-plain btn-sm" onclick="showToast('拨打电话')">电话联系</div>` : ''}
+            ${o.status==='done' ? `<div class="btn-plain btn-sm" onclick="showToast('拨打电话')">电话联系</div>` : ''}
           </div>
         </div>
       `).join('');
     }
 
+    var currentOrderId = null;
+    function goOrderDetail(orderId) {
+      var order = orders.find(function(o){ return o.id === orderId; });
+      if (!order) return;
+      currentOrderId = orderId;
+      var statusText = { wait: '待服务', running: '服务中', done: '已完成' }[order.status];
+      document.getElementById('od-status').innerText = statusText;
+      document.getElementById('od-status').className = 'od-status ' + order.status;
+      document.getElementById('od-service-type').innerText = order.service;
+      document.getElementById('od-service-time').innerText = order.date;
+      document.getElementById('od-hospital').innerText = order.hospital;
+      document.getElementById('od-dept').innerText = order.dept;
+      document.getElementById('od-remark').innerText = order.remark || '无';
+      document.getElementById('od-name').innerText = order.patient;
+      document.getElementById('od-gender').innerText = order.gender || '男';
+      document.getElementById('od-age').innerText = (order.age || '45') + '岁';
+      document.getElementById('od-idcard').innerText = order.idcard || '3101**********0012';
+      document.getElementById('od-history').innerText = order.history || '无';
+      document.getElementById('od-phone').innerText = order.phone;
+      document.getElementById('od-title-id').innerText = orderId;
+      showPage('orderdetail');
+    }
+
     function switchTab(el) { document.querySelectorAll('.tab-wrap .tab-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); currentTab = parseInt(el.dataset.idx); renderOrders(); }
     function switchNav(el) { document.querySelectorAll('.tabbar-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); currentNav = el.dataset.page; showPage(currentNav); }
-    function showPage(page) { ['service','mine','settings','settlein','sendsms','servicerecord','servicesummary','servicetime'].forEach(p => document.getElementById('page-'+p).classList.add('hidden')); document.getElementById('page-'+page).classList.remove('hidden'); document.getElementById('screen').scrollTop = 0; if (page === 'servicetime' && !calYear) initCalendar(); }
+    function showPage(page) { ['service','mine','settings','settlein','sendsms','servicerecord','servicesummary','servicetime','orderdetail'].forEach(p => document.getElementById('page-'+p).classList.add('hidden')); document.getElementById('page-'+page).classList.remove('hidden'); document.getElementById('screen').scrollTop = 0; if (page === 'servicetime' && !calYear) initCalendar(); }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 2000); }
     function showPrivacy() { showModal('隐私协议', '本协议说明我们如何收集、使用和保护您的个人信息。', `<div class="btn-primary" onclick="closeModal()">我知道了</div>`); }
     function showModal(title, body, foot) { document.getElementById('modal-title').innerText = title; document.getElementById('modal-body').innerHTML = body; document.getElementById('modal-foot').innerHTML = foot; document.getElementById('modal-mask').classList.remove('hidden'); document.getElementById('modal').classList.remove('hidden'); }
@@ -989,81 +1090,70 @@
       return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
     }
 
-    // ========== 3. 服务过程记录 ==========
+    // ========== 3. 服务回填 ==========
+    var srImageCount = 0;
+    var srSigned = false;
+
     function openServiceRecord(orderId) {
       currentServiceOrderId = orderId;
-      document.getElementById('sr-order-id').innerText = orderId;
-      document.getElementById('sr-timer').innerText = formatTime(serviceSeconds);
-      document.getElementById('sr-input').value = '';
-      document.getElementById('sr-char-count').innerText = '0';
-      serviceEntries = [
-        { time: '09:00:15', text: '已到达医院，与患者汇合' },
-        { time: '09:05:30', text: '陪同患者前往骨科门诊签到' }
-      ];
-      serviceImages = [];
-      renderServiceEntries();
-      renderServiceImages();
+      // 重置表单
+      document.getElementById('sr-status').value = '进行中';
+      document.getElementById('sr-expert').value = '';
+      document.getElementById('sr-disease').value = '';
+      document.getElementById('sr-checkup').value = '';
+      document.getElementById('sr-advice').value = '';
+      document.getElementById('sr-note').value = '';
+      srImageCount = 0;
+      srSigned = false;
+      // 重置图片
+      var imgBox = document.getElementById('sr-images');
+      imgBox.innerHTML = '<div style="width:72px;height:72px;border:1.5px dashed #d1d5db;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer" onclick="addSrImage(this)"><span style="font-size:24px;color:#ccc">+</span><span style="font-size:10px;color:#999">上传</span></div>';
+      // 重置签字
+      var signArea = document.getElementById('sr-sign-area');
+      signArea.innerHTML = '<span style="font-size:13px;color:#bbb">点击此处签字</span>';
+      signArea.style.background = '#fafafa';
       showPage('servicerecord');
     }
 
-    function addServiceEntry() {
-      const input = document.getElementById('sr-input');
-      const text = input.value.trim();
-      if (!text) { showToast('请输入记录内容'); return; }
-      const now = new Date();
-      const time = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0') + ':' + String(now.getSeconds()).padStart(2,'0');
-      serviceEntries.push({ time, text });
-      input.value = '';
-      document.getElementById('sr-char-count').innerText = '0';
-      renderServiceEntries();
-      showToast('记录已添加');
+    function addSrImage(el) {
+      if (srImageCount >= 5) { showToast('最多上传5张照片'); return; }
+      srImageCount++;
+      var newImg = document.createElement('div');
+      newImg.style.cssText = 'width:72px;height:72px;border-radius:8px;background:linear-gradient(135deg,#e0f2fe,#f0f9ff);display:flex;align-items:center;justify-content:center;position:relative;cursor:pointer';
+      newImg.innerHTML = '<span style="font-size:11px;color:#0284c7">照片' + srImageCount + '</span><span onclick="event.stopPropagation();removeSrImage(this.parentElement)" style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#ff4d4f;color:#fff;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer">×</span>';
+      newImg.onclick = function() { showToast('预览照片' + srImageCount); };
+      el.parentNode.insertBefore(newImg, el);
+      if (srImageCount >= 5) el.style.display = 'none';
     }
 
-    function renderServiceEntries() {
-      const el = document.getElementById('sr-entries');
-      el.innerHTML = serviceEntries.map(e => `
-        <div class="sr-entry">
-          <div class="sr-entry-time">${e.time}</div>
-          <div class="sr-entry-text">${e.text}</div>
-        </div>
-      `).join('');
+    function removeSrImage(el) {
+      el.remove();
+      srImageCount--;
+      var addBtn = document.querySelector('#sr-images > div:last-child');
+      if (addBtn && srImageCount < 5) addBtn.style.display = '';
     }
 
-    function addServiceImage(el) {
-      if (serviceImages.length >= 5) { showToast('最多上传5张照片'); return; }
-      serviceImages.push({ id: Date.now() });
-      renderServiceImages();
+    function signPad(el) {
+      if (srSigned) return;
+      srSigned = true;
+      el.innerHTML = '<svg viewBox="0 0 200 80" style="width:100%;height:100%"><path d="M20,50 Q40,20 60,40 T100,45 Q130,25 160,50" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+      el.style.background = '#fff';
+      el.style.borderColor = '#10B981';
+      showToast('签字完成');
     }
 
-    function removeServiceImage(idx) {
-      serviceImages.splice(idx, 1);
-      renderServiceImages();
-    }
-
-    function renderServiceImages() {
-      const el = document.getElementById('sr-images');
-      let html = serviceImages.map((img, i) => `
-        <div class="upload-box filled" style="position:relative" onclick="removeServiceImage(${i})">
-          <span style="font-size:11px;color:#999">照片${i+1}</span>
-          <span style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#ff4d4f;color:#fff;border-radius:50%;font-size:10px;display:flex;align-items:center;justify-content:center">×</span>
-        </div>
-      `).join('');
-      if (serviceImages.length < 5) {
-        html += '<div class="upload-box" onclick="addServiceImage(this)"><span class="upload-plus">+</span><span>上传照片</span></div>';
+    function saveServiceRecord(isDraft) {
+      if (!isDraft) {
+        if (!document.getElementById('sr-expert').value.trim()) { showToast('请填写服务专家'); return; }
+        if (!document.getElementById('sr-disease').value.trim()) { showToast('请填写疾病名称'); return; }
+        if (!document.getElementById('sr-checkup').value.trim()) { showToast('请填写当日检查情况'); return; }
+        if (!srSigned) { showToast('请完成客户签字'); return; }
+        showToast('回填已提交');
+        setTimeout(function() { showPage('orderdetail'); }, 1000);
+      } else {
+        showToast('已保存草稿');
       }
-      html += '<div style="font-size:11px;color:#999;align-self:center">' + serviceImages.length + '/5</div>';
-      el.innerHTML = html;
     }
-
-    function saveServiceRecord() {
-      showToast('服务记录已保存');
-      setTimeout(() => showPage('service'), 1000);
-    }
-
-    // 字数计数
-    document.getElementById('sr-input').addEventListener('input', function() {
-      document.getElementById('sr-char-count').innerText = this.value.length;
-    });
 
     // ========== 4. 结束服务前置校验 ==========
     function endService(orderId) {

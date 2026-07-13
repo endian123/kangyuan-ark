@@ -1,0 +1,309 @@
+.settlein-page {
+  padding-bottom: 160rpx;
+}
+
+.card-title {
+  margin: 32rpx 24rpx 16rpx;
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.form-card {
+  padding: 8rpx 28rpx;
+}
+
+.form-item {
+  display: flex;
+  align-items: center;
+  min-height: 96rpx;
+  border-bottom: 2rpx solid var(--border);
+  padding: 16rpx 0;
+}
+
+.form-item:last-child {
+  border-bottom: none;
+}
+
+.form-item.column {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 20rpx 0;
+}
+
+.form-item .label {
+  width: 180rpx;
+  font-size: 28rpx;
+  color: var(--text);
+}
+
+.form-item .label.required::after {
+  content: '*';
+  color: var(--danger);
+  margin-left: 6rpx;
+}
+
+.form-item .input {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text);
+}
+
+.form-item .link {
+  font-size: 26rpx;
+  color: var(--primary);
+  margin-left: 16rpx;
+}
+
+.radio-group {
+  flex: 1;
+  display: flex;
+  gap: 32rpx;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  font-size: 28rpx;
+  color: var(--text);
+}
+
+.radio-group radio {
+  margin-right: 10rpx;
+}
+
+.picker {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--text-light);
+}
+
+.picker.active {
+  color: var(--text);
+}
+
+/* 身份证上传 */
+.idcard-item {
+  align-items: flex-start;
+  flex-direction: column;
+  padding: 20rpx 0;
+}
+
+.idcard-item .label {
+  margin-bottom: 16rpx;
+}
+
+.idcard-upload-row {
+  display: flex;
+  gap: 24rpx;
+}
+
+.recognize-tip {
+  font-size: 24rpx;
+  color: var(--primary);
+  padding: 8rpx 28rpx;
+  text-align: center;
+}
+
+.recognize-tip.success {
+  color: var(--primary);
+}
+
+/* 偏好医院 */
+.label-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+
+.add-link {
+  font-size: 26rpx;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.hospital-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.hospital-tag {
+  display: flex;
+  align-items: center;
+  padding: 8rpx 16rpx;
+  background: var(--primary-light);
+  border-radius: 8rpx;
+  font-size: 24rpx;
+  color: var(--primary);
+}
+
+.hospital-tag .remove {
+  margin-left: 8rpx;
+  font-size: 28rpx;
+  cursor: pointer;
+}
+
+.placeholder {
+  font-size: 26rpx;
+  color: var(--text-light);
+}
+
+/* 证书 */
+.cert-card {
+  margin-bottom: 16rpx;
+}
+
+.cert-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12rpx 0;
+  border-bottom: 2rpx solid var(--border);
+  margin-bottom: 8rpx;
+}
+
+.cert-index {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.delete-link {
+  font-size: 26rpx;
+  color: var(--danger);
+}
+
+.upload-wrap {
+  padding: 16rpx 0;
+}
+
+.upload-box {
+  width: 240rpx;
+  height: 240rpx;
+  border: 2rpx dashed #d9d9d9;
+  border-radius: 16rpx;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.upload-box image {
+  width: 100%;
+  height: 100%;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-light);
+  font-size: 24rpx;
+}
+
+.upload-placeholder .plus {
+  font-size: 56rpx;
+  line-height: 1;
+  margin-bottom: 8rpx;
+}
+
+.agree-row {
+  display: flex;
+  align-items: center;
+  margin: 32rpx 24rpx;
+  font-size: 24rpx;
+  color: var(--text-secondary);
+}
+
+.agree-row checkbox {
+  margin-right: 8rpx;
+}
+
+.agree-link {
+  color: var(--primary);
+}
+
+.submit-wrap {
+  margin: 24rpx 24rpx 40rpx;
+}
+
+.submit-wrap .btn-primary.disabled {
+  opacity: 0.7;
+}
+
+/* 医院选择弹窗 */
+.mask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 2000;
+}
+
+.hospital-picker {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 70vh;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+}
+
+.picker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32rpx;
+  border-bottom: 2rpx solid var(--border);
+}
+
+.picker-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.picker-close {
+  font-size: 28rpx;
+  color: var(--primary);
+  font-weight: 500;
+}
+
+.picker-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16rpx;
+}
+
+.hospital-option {
+  padding: 20rpx 24rpx;
+  border-radius: 16rpx;
+  margin-bottom: 12rpx;
+  border: 2rpx solid var(--border);
+}
+
+.hospital-option.selected {
+  background: var(--primary-light);
+  border-color: var(--primary);
+}
+
+.hospital-name {
+  font-size: 28rpx;
+  color: var(--text);
+  font-weight: 500;
+  margin-bottom: 6rpx;
+}
+
+.hospital-address {
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+.hospital-option.selected .hospital-name {
+  color: var(--primary);
+}

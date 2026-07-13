@@ -1,0 +1,81 @@
+.smslist-page {
+  padding-bottom: 40rpx;
+}
+
+.tabs {
+  display: flex;
+  padding: 16rpx 24rpx;
+  gap: 16rpx;
+}
+
+.tab {
+  padding: 12rpx 32rpx;
+  border-radius: 32rpx;
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  background: #f5f5f5;
+}
+
+.tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+
+.sms-list {
+  padding: 0 24rpx;
+}
+
+.sms-card {
+  margin-bottom: 16rpx;
+}
+
+.sms-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.sms-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.sms-status {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.sms-status.sent {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.sms-status.sending {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.sms-content {
+  font-size: 28rpx;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 12rpx;
+}
+
+.sms-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 24rpx;
+  color: var(--text-light);
+}
+
+.empty {
+  text-align: center;
+  padding: 100rpx 0;
+  color: var(--text-light);
+  font-size: 28rpx;
+}

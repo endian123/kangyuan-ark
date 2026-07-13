@@ -1,0 +1,115 @@
+<view class="page mine-page safe-bottom">
+  <!-- 顶部背景 -->
+  <view class="top-bg"></view>
+
+  <!-- 用户信息 -->
+  <view class="user-card card">
+    <view class="avatar-wrap">
+      <image wx:if="{{user.avatar}}" class="avatar" src="{{user.avatar}}" mode="aspectFill"></image>
+      <view wx:else class="avatar default">{{user.name[0]}}</view>
+    </view>
+    <view class="user-info">
+      <view class="name-row">
+        <text class="name">{{user.name}}</text>
+        <text class="status-badge {{user.status}}">{{
+          user.status === 'unsettled' ? '未入驻' :
+          user.status === 'auditing' ? '审核中' :
+          user.status === 'settled' ? '已入驻' : '审核未通过'
+        }}</text>
+      </view>
+      <text class="phone">{{user.phone}}</text>
+    </view>
+    <text class="arrow">›</text>
+  </view>
+
+  <!-- 服务单量 -->
+  <view class="card volume-card">
+    <view class="volume-head">
+      <text class="section-title">服务单量</text>
+      <text class="volume-more" bindtap="goVolumeDetail">查看详情 ›</text>
+    </view>
+    <view class="volume-body">
+      <view class="volume-item">
+        <text class="num">12</text>
+        <text class="label">本月接单</text>
+      </view>
+      <view class="volume-item">
+        <text class="num">86</text>
+        <text class="label">累计服务</text>
+      </view>
+      <view class="volume-item">
+        <text class="num">3</text>
+        <text class="label">进行中</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 入驻流程 -->
+  <view class="card flow-card">
+    <view class="section-title">入驻流程</view>
+    <view class="flow-steps">
+      <view class="step">
+        <view class="dot active"></view>
+        <text>入驻</text>
+      </view>
+      <view class="line"></view>
+      <view class="step">
+        <view class="dot active"></view>
+        <text>填写信息</text>
+      </view>
+      <view class="line"></view>
+      <view class="step">
+        <view class="dot {{user.status !== 'unsettled' ? 'active' : ''}}" id="step-submit"></view>
+        <text>提交申请</text>
+      </view>
+      <view class="line"></view>
+      <view class="step">
+        <view class="dot {{user.status === 'auditing' || user.status === 'settled' ? 'active' : ''}}" id="step-audit"></view>
+        <text>审核通过</text>
+      </view>
+      <view class="line"></view>
+      <view class="step">
+        <view class="dot {{user.status === 'settled' ? 'active' : ''}}" id="step-sign"></view>
+        <text>在线签署</text>
+      </view>
+      <view class="line"></view>
+      <view class="step">
+        <view class="dot {{user.status === 'settled' ? 'active' : ''}}" id="step-done"></view>
+        <text>入驻通过</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 我的工具 -->
+  <view class="card tools-card">
+    <view class="tools-title">我的工具</view>
+    <view class="tools-grid">
+      <view class="tool-item" bindtap="goSettleIn">
+        <view class="tool-icon">
+          <view class="icon-cert"></view>
+        </view>
+        <text class="tool-label">入驻申请</text>
+      </view>
+      <view class="tool-item" bindtap="goServiceTime">
+        <view class="tool-icon">
+          <view class="icon-time"></view>
+        </view>
+        <text class="tool-label">服务时间</text>
+      </view>
+      <view class="tool-item" bindtap="goSmsList">
+        <view class="tool-icon">
+          <view class="icon-sms"></view>
+        </view>
+        <text class="tool-label">短信列表</text>
+      </view>
+      <view class="tool-item" bindtap="goSettings">
+        <view class="tool-icon">
+          <view class="icon-setting"></view>
+        </view>
+        <text class="tool-label">我的设置</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="version">v1.0.0 康元方舟陪诊平台</view>
+</view>

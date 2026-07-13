@@ -1,0 +1,79 @@
+<view class="page fillorder-page safe-bottom">
+  <view class="card">
+    <view class="section-title">工单信息回填</view>
+    <view class="form-item">
+      <text class="label">服务状态</text>
+      <picker value="{{form.status === 'completed' ? 0 : 1}}" range="{{['服务完成','服务未完成']}}" data-field="status" bindchange="onInput">
+        <view class="picker">{{form.status === 'completed' ? '服务完成' : '服务未完成'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="label">服务专家</text>
+      <input class="input" placeholder="请输入专家姓名" data-field="expert" value="{{form.expert}}" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="label required">疾病名称</text>
+      <input class="input" placeholder="请输入疾病名称" data-field="disease" value="{{form.disease}}" bindinput="onInput" />
+    </view>
+
+    <view class="form-item column">
+      <text class="label required">医生建议</text>
+      <textarea class="textarea" placeholder="请填写医生建议" data-field="doctorAdvice" value="{{form.doctorAdvice}}" bindinput="onInput" maxlength="500"></textarea>
+    </view>
+
+    <view class="form-item column">
+      <text class="label">当日检查情况</text>
+      <textarea class="textarea" placeholder="请填写检查项目及结果" data-field="exam" value="{{form.exam}}" bindinput="onInput" maxlength="500"></textarea>
+    </view>
+
+    <view class="form-item column">
+      <text class="label">当日开药情况</text>
+      <textarea class="textarea" placeholder="请填写药品名称、用量" data-field="medicine" value="{{form.medicine}}" bindinput="onInput" maxlength="500"></textarea>
+    </view>
+
+    <view class="form-item column">
+      <text class="label">备注</text>
+      <textarea class="textarea" placeholder="其他需要说明的内容" data-field="remark" value="{{form.remark}}" bindinput="onInput" maxlength="500"></textarea>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">上传凭证</view>
+    <view class="upload-box" bindtap="chooseImage">
+      <image wx:if="{{form.voucher}}" src="{{form.voucher}}" mode="aspectFill" bindtap="previewVoucher"></image>
+      <view wx:else class="upload-placeholder">
+        <text class="plus">+</text>
+        <text>上传就诊凭证</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">用户签名</view>
+    <view class="sign-wrap">
+      <canvas
+        id="signCanvas"
+        canvas-id="signCanvas"
+        class="sign-canvas"
+        bindtouchstart="touchStart"
+        bindtouchmove="touchMove"
+      ></canvas>
+      <view class="sign-tips">请在上方空白处手写签名</view>
+    </view>
+    <view class="sign-actions">
+      <view class="btn-plain" bindtap="clearSign">清空</view>
+      <view class="btn-ghost" bindtap="saveSign">保存签名</view>
+    </view>
+    <view wx:if="{{form.signature}}" class="sign-preview">
+      <image src="{{form.signature}}" mode="aspectFit"></image>
+    </view>
+  </view>
+
+  <view class="submit-wrap">
+    <view class="btn-primary {{submitting ? 'disabled' : ''}}" bindtap="submit">
+      {{submitting ? '提交中...' : '提交回填'}}
+    </view>
+  </view>
+</view>

@@ -1,0 +1,145 @@
+<view class="page service-page safe-bottom">
+  <!-- Banner -->
+  <swiper class="banner" indicator-dots autoplay circular interval="4000">
+    <swiper-item>
+      <view class="banner-item bg1">
+        <view class="banner-title">专业陪诊服务</view>
+        <view class="banner-desc">让就医更轻松，让陪伴更温暖</view>
+      </view>
+    </swiper-item>
+    <swiper-item>
+      <view class="banner-item bg2">
+        <view class="banner-title">入驻成为陪诊师</view>
+        <view class="banner-desc">灵活接单，稳定收入</view>
+      </view>
+    </swiper-item>
+    <swiper-item>
+      <view class="banner-item bg3">
+        <view class="banner-title">服务规范指引</view>
+        <view class="banner-desc">专业培训，优质服务</view>
+      </view>
+    </swiper-item>
+  </swiper>
+
+  <!-- Tab -->
+  <view class="tab-wrap card">
+    <view
+      wx:for="{{tabs}}"
+      wx:key="index"
+      class="tab {{activeTab === index ? 'active' : ''}}"
+      data-index="{{index}}"
+      bindtap="switchTab"
+    >
+      {{item}}
+    </view>
+  </view>
+
+  <!-- 工单列表 -->
+  <view class="order-list">
+    <block wx:for="{{orders}}" wx:key="id">
+      <view
+        class="order-card card"
+        wx:if="{{activeTab === 3 || (activeTab === 0 && item.status === 'wait') || (activeTab === 1 && item.status === 'running') || (activeTab === 2 && item.status === 'done')}}"
+      >
+        <view class="order-head">
+          <text class="order-id">{{item.id}}</text>
+          <text class="tag {{item.tagClass}}">{{item.statusText}}</text>
+        </view>
+
+        <view class="patient-row">
+          <text class="name">{{item.patient}}</text>
+          <text class="phone">{{item.phone}}</text>
+          <text class="price">{{item.price}}</text>
+        </view>
+
+        <view class="info-row">
+          <text class="info-label">就诊医院</text>
+          <text class="info-value">{{item.hospital}} · {{item.dept}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">预约时间</text>
+          <text class="info-value">{{item.date}}</text>
+        </view>
+        <view class="info-row">
+          <text class="info-label">服务类型</text>
+          <text class="info-value">{{item.service}}</text>
+        </view>
+
+        <view class="divider"></view>
+
+        <!-- 待服务操作 -->
+        <view class="action-row" wx:if="{{item.status === 'wait'}}">
+          <view class="btn-plain btn-sm" data-id="{{item.id}}" bindtap="viewDetail">订单详情</view>
+          <view class="btn-plain btn-sm" data-phone="{{item.phone}}" bindtap="callPhone">电话联系</view>
+          <view class="btn-plain btn-sm" data-item="{{item}}" bindtap="openSmsModal">发送短信</view>
+          <view class="btn-primary btn-sm" data-type="start" data-id="{{item.id}}" bindtap="openSignModal">开始服务</view>
+        </view>
+
+        <!-- 服务中操作 -->
+        <view class="action-row" wx:if="{{item.status === 'running'}}">
+          <view class="btn-plain btn-sm" data-phone="{{item.phone}}" bindtap="callPhone">电话联系</view>
+          <view class="btn-ghost btn-sm" data-item="{{item}}" bindtap="openSmsModal">发送短信</view>
+          <view class="btn-plain btn-sm" data-id="{{item.id}}" bindtap="goFill">服务回填</view>
+          <view class="btn-primary btn-sm" data-type="end" data-id="{{item.id}}" bindtap="openSignModal">结束服务</view>
+        </view>
+
+        <!-- 已完成操作 -->
+        <view class="action-row" wx:if="{{item.status === 'done'}}">
+          <view class="btn-plain btn-sm" data-id="{{item.id}}" bindtap="viewDetail">查看详情</view>
+          <view class="btn-plain btn-sm" data-phone="{{item.phone}}" bindtap="callPhone">电话联系</view>
+        </view>
+      </view>
+    </block>
+
+    <view class="empty" wx:if="{{orders.length === 0}}">
+      暂无相关工单
+    </view>
+  </view>
+
+  <!-- 签到弹窗 -->
+  <view class="mask" wx:if="{{showSignModal}}" bindtap="closeSignModal"></view>
+  <view class="modal" wx:if="{{showSignModal}}">
+    <view class="modal-title">{{signType === 'start' ? '开始服务签到' : '结束服务签到'}}</view>
+    <view class="modal-body">
+      <view class="target-hospital">目标医院：{{currentOrder.hospital}}</view>
+      <view class="tip">请确认已到达医院附近（500米内），点击签到将获取当前定位进行校验。</view>
+      <view class="modal-msg {{modalMsg.includes('成功') ? 'success' : ''}}" wx:if="{{modalMsg}}">{{modalMsg}}</view>
+    </view>
+    <view class="modal-foot">
+      <view class="btn-plain" bindtap="closeSignModal">取消</view>
+      <view class="btn-primary {{signLoading ? 'disabled' : ''}}" bindtap="getLocationAndSign">
+        {{signLoading ? '定位中...' : '立即签到'}}
+      </view>
+    </view>
+  </view>
+
+  <!-- 发送短信弹窗 -->
+  <view class="mask" wx:if="{{showSmsModal}}" bindtap="closeSmsModal"></view>
+  <view class="modal sms-modal" wx:if="{{showSmsModal}}">
+    <view class="modal-title">发送短信</view>
+    <view class="modal-body">
+      <view class="sms-info">
+        <text class="sms-label">收件人：</text>
+        <text>{{smsOrder.patient}} {{smsOrder.phone}}</text>
+      </view>
+      <view class="sms-templates">
+        <view class="sms-template {{smsTemplate === 1 ? 'active' : ''}}" data-id="1" bindtap="selectTemplate">
+          <text class="tpl-title">预约提醒</text>
+          <text class="tpl-content">您好，您的陪诊服务已预约成功，请准时到达。</text>
+        </view>
+        <view class="sms-template {{smsTemplate === 2 ? 'active' : ''}}" data-id="2" bindtap="selectTemplate">
+          <text class="tpl-title">服务进行中</text>
+          <text class="tpl-content">您的陪诊服务正在进行中，如有问题请联系陪诊师。</text>
+        </view>
+        <view class="sms-template {{smsTemplate === 3 ? 'active' : ''}}" data-id="3" bindtap="selectTemplate">
+          <text class="tpl-title">服务完成</text>
+          <text class="tpl-content">您的陪诊服务已完成，感谢您的信任与支持。</text>
+        </view>
+      </view>
+    </view>
+    <view class="modal-foot">
+      <view class="btn-plain" bindtap="closeSmsModal">取消</view>
+      <view class="btn-primary" bindtap="sendSms">发送</view>
+    </view>
+  </view>
+</view>

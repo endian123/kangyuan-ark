@@ -1,0 +1,172 @@
+<view class="page settlein-page safe-bottom">
+  <view class="section-title card-title">基本信息</view>
+  <view class="form-card card">
+    <view class="form-item">
+      <text class="label required">姓名</text>
+      <input class="input" placeholder="请输入真实姓名" data-field="name" value="{{form.name}}" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="label required">手机号</text>
+      <input class="input" placeholder="自动获取微信授权" data-field="phone" value="{{form.phone}}" bindinput="onInput" />
+      <view class="link" bindtap="getPhone">获取</view>
+    </view>
+
+    <view class="form-item idcard-item">
+      <text class="label required">身份证照片</text>
+      <view class="idcard-upload-row">
+        <view class="upload-box" bindtap="chooseImage" data-field="idCardFront">
+          <image wx:if="{{form.idCardFront}}" src="{{form.idCardFront}}" mode="aspectFill" data-url="{{form.idCardFront}}" bindtap="previewImage"></image>
+          <view wx:else class="upload-placeholder">
+            <text class="plus">+</text>
+            <text>身份证正面</text>
+          </view>
+        </view>
+        <view class="upload-box" bindtap="chooseImage" data-field="idCardBack">
+          <image wx:if="{{form.idCardBack}}" src="{{form.idCardBack}}" mode="aspectFill" data-url="{{form.idCardBack}}" bindtap="previewImage"></image>
+          <view wx:else class="upload-placeholder">
+            <text class="plus">+</text>
+            <text>身份证反面</text>
+          </view>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{idCardRecognizing}}" class="recognize-tip">正在识别身份证信息...</view>
+    <view wx:if="{{idCardRecognized}}" class="recognize-tip success">身份证信息已自动填充</view>
+
+    <view class="form-item">
+      <text class="label required">性别</text>
+      <radio-group class="radio-group" bindchange="onGenderChange">
+        <label><radio value="1" checked="{{form.gender === '1'}}" color="#10B981" />男</label>
+        <label><radio value="2" checked="{{form.gender === '2'}}" color="#10B981" />女</label>
+      </radio-group>
+    </view>
+
+    <view class="form-item">
+      <text class="label required">出生年月</text>
+      <picker mode="date" fields="month" value="{{form.birth}}" data-field="birth" bindchange="onInput">
+        <view class="picker {{form.birth ? 'active' : ''}}">{{form.birth || '请选择'}}</view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="label required">身份证号</text>
+      <input class="input" placeholder="上传身份证后自动识别" data-field="idCard" value="{{form.idCard}}" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="label required">城市</text>
+      <input class="input" placeholder="请输入可服务城市" data-field="city" value="{{form.city}}" bindinput="onInput" />
+    </view>
+
+    <view class="form-item">
+      <text class="label required">可服务时间</text>
+      <input class="input" placeholder="如：周一至周五 08:00-18:00" data-field="availableTime" value="{{form.availableTime}}" bindinput="onInput" />
+    </view>
+
+    <view class="form-item column">
+      <view class="label-row">
+        <text class="label">偏好医院</text>
+        <text class="add-link" bindtap="openHospitalPicker">+ 添加</text>
+      </view>
+      <view class="hospital-tags" wx:if="{{preferHospitals.length > 0}}">
+        <block wx:for="{{preferHospitals}}" wx:key="id">
+          <view class="hospital-tag">
+            <text>{{item.name}}</text>
+            <text class="remove" data-id="{{item.id}}" bindtap="removeHospital">×</text>
+          </view>
+        </block>
+      </view>
+      <text class="placeholder" wx:else>点击添加偏好服务的医院</text>
+    </view>
+  </view>
+
+  <!-- 学历证书 -->
+  <view class="section-title card-title flex-between">
+    <text>学历证书</text>
+    <text class="add-link" bindtap="addEduCert">+ 添加</text>
+  </view>
+  <block wx:for="{{eduCerts}}" wx:key="index">
+    <view class="form-card card cert-card">
+      <view class="cert-head">
+        <text class="cert-index">证书 {{index + 1}}</text>
+        <text wx:if="{{eduCerts.length > 1}}" class="delete-link" bindtap="removeEduCert" data-index="{{index}}">删除</text>
+      </view>
+      <view class="form-item">
+        <text class="label">获取时间</text>
+        <picker mode="date" fields="month" value="{{item.date}}" data-index="{{index}}" data-type="edu" bindchange="onCertDateChange">
+          <view class="picker {{item.date ? 'active' : ''}}">{{item.date || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="upload-wrap">
+        <view class="upload-box" bindtap="chooseCertImage" data-index="{{index}}" data-type="edu">
+          <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" data-url="{{item.image}}" bindtap="previewImage"></image>
+          <view wx:else class="upload-placeholder">
+            <text class="plus">+</text>
+            <text>上传证书图片</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 资质证书 -->
+  <view class="section-title card-title flex-between">
+    <text>资质证书</text>
+    <text class="add-link" bindtap="addQualCert">+ 添加</text>
+  </view>
+  <block wx:for="{{qualCerts}}" wx:key="index">
+    <view class="form-card card cert-card">
+      <view class="cert-head">
+        <text class="cert-index">证书 {{index + 1}}</text>
+        <text wx:if="{{qualCerts.length > 1}}" class="delete-link" bindtap="removeQualCert" data-index="{{index}}">删除</text>
+      </view>
+      <view class="form-item">
+        <text class="label">获取时间</text>
+        <picker mode="date" fields="month" value="{{item.date}}" data-index="{{index}}" data-type="qual" bindchange="onCertDateChange">
+          <view class="picker {{item.date ? 'active' : ''}}">{{item.date || '请选择'}}</view>
+        </picker>
+      </view>
+      <view class="upload-wrap">
+        <view class="upload-box" bindtap="chooseCertImage" data-index="{{index}}" data-type="qual">
+          <image wx:if="{{item.image}}" src="{{item.image}}" mode="aspectFill" data-url="{{item.image}}" bindtap="previewImage"></image>
+          <view wx:else class="upload-placeholder">
+            <text class="plus">+</text>
+            <text>上传证书图片</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view class="agree-row">
+    <checkbox checked="{{form.agreed}}" bindtap="onAgreeChange" color="#10B981" />
+    <text>我已阅读并同意</text>
+    <text class="agree-link">《入驻协议》</text>
+    <text>与</text>
+    <text class="agree-link">《隐私条款》</text>
+  </view>
+
+  <view class="submit-wrap">
+    <view class="btn-primary {{submitting ? 'disabled' : ''}}" bindtap="submit">
+      {{submitting ? '提交中...' : '提交申请'}}
+    </view>
+  </view>
+
+  <!-- 医院选择弹窗 -->
+  <view class="mask" wx:if="{{showHospitalPicker}}" bindtap="closeHospitalPicker"></view>
+  <view class="hospital-picker" wx:if="{{showHospitalPicker}}">
+    <view class="picker-head">
+      <text class="picker-title">选择偏好医院</text>
+      <text class="picker-close" bindtap="closeHospitalPicker">完成</text>
+    </view>
+    <view class="picker-body">
+      <block wx:for="{{hospitals}}" wx:key="id">
+        <view class="hospital-option {{preferHospitals.some(h => h.id === item.id) ? 'selected' : ''}}" data-id="{{item.id}}" bindtap="toggleHospital">
+          <view class="hospital-name">{{item.name}}</view>
+          <view class="hospital-address">{{item.address}}</view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

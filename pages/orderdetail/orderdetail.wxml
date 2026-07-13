@@ -1,0 +1,77 @@
+<view class="page orderdetail-page safe-bottom" wx:if="{{order}}">
+  <!-- 状态头 -->
+  <view class="status-bar">
+    <view class="status-tag {{order.tagClass}}">{{order.statusText}}</view>
+    <text class="order-id">{{order.id}}</text>
+  </view>
+
+  <!-- 患者信息 -->
+  <view class="card">
+    <view class="section-title">患者信息</view>
+    <view class="info-row">
+      <text class="info-label">姓名</text>
+      <text class="info-value">{{order.patient}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">性别</text>
+      <text class="info-value">{{order.gender}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">年龄</text>
+      <text class="info-value">{{order.age}}岁</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">联系电话</text>
+      <text class="info-value">{{order.phone}}</text>
+    </view>
+  </view>
+
+  <!-- 就诊信息 -->
+  <view class="card">
+    <view class="section-title">就诊信息</view>
+    <view class="info-row">
+      <text class="info-label">就诊医院</text>
+      <text class="info-value">{{order.hospital}} · {{order.dept}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">医院地址</text>
+      <text class="info-value">{{order.address}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">预约时间</text>
+      <text class="info-value">{{order.date}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">服务类型</text>
+      <text class="info-value">{{order.service}}</text>
+    </view>
+    <view class="info-row">
+      <text class="info-label">服务费用</text>
+      <text class="info-value price">{{order.price}}</text>
+    </view>
+    <view class="info-row" wx:if="{{order.remark}}">
+      <text class="info-label">备注</text>
+      <text class="info-value">{{order.remark}}</text>
+    </view>
+  </view>
+
+  <!-- 工单信息（仅已完成） -->
+  <view class="card" wx:if="{{order.status === 'done'}}">
+    <view class="section-title">服务回填信息</view>
+    <view class="info-row" wx:if="{{order.exam}}">
+      <text class="info-label">当日检查</text>
+      <text class="info-value">{{order.exam}}</text>
+    </view>
+    <view class="info-row" wx:if="{{order.medicine}}">
+      <text class="info-label">当日开药</text>
+      <text class="info-value">{{order.medicine}}</text>
+    </view>
+  </view>
+
+  <!-- 操作按钮 -->
+  <view class="action-bar">
+    <view class="btn-plain" bindtap="callPhone">电话联系</view>
+    <view class="btn-ghost" wx:if="{{order.status === 'running'}}" bindtap="goFill">服务回填</view>
+    <view class="btn-primary" wx:if="{{order.status === 'wait'}}" bindtap="openSign">开始服务</view>
+  </view>
+</view>

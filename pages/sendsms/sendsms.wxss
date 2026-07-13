@@ -1,0 +1,144 @@
+.sms-page {
+  padding-bottom: 160rpx;
+  background: #f5f7fa;
+}
+
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text);
+  margin: 32rpx 24rpx 16rpx;
+}
+
+.receiver-card {
+  display: flex;
+  align-items: center;
+}
+
+.receiver-info {
+  display: flex;
+  align-items: center;
+}
+
+.receiver-avatar {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: var(--primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32rpx;
+  color: var(--primary);
+  font-weight: 600;
+  margin-right: 20rpx;
+}
+
+.receiver-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8rpx;
+}
+
+.receiver-phone {
+  font-size: 26rpx;
+  color: var(--text-secondary);
+}
+
+.template-card {
+  padding: 8rpx 24rpx;
+}
+
+.template-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.template-item {
+  display: flex;
+  align-items: flex-start;
+  padding: 20rpx 0;
+  border-bottom: 2rpx solid var(--border);
+  cursor: pointer;
+}
+
+.template-item:last-child {
+  border-bottom: none;
+}
+
+.template-item.active .template-radio {
+  border-color: var(--primary);
+  background: var(--primary-light);
+}
+
+.template-radio {
+  width: 40rpx;
+  height: 40rpx;
+  border: 4rpx solid #ddd;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+  flex-shrink: 0;
+}
+
+.radio-dot {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
+.template-content {
+  flex: 1;
+}
+
+.template-name {
+  font-size: 28rpx;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8rpx;
+}
+
+.template-preview {
+  font-size: 24rpx;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.template-item.active .template-name {
+  color: var(--primary);
+}
+
+.content-card {
+  padding: 16rpx;
+}
+
+.sms-content {
+  width: 100%;
+  height: 240rpx;
+  background: #f9f9f9;
+  border-radius: 16rpx;
+  padding: 16rpx;
+  font-size: 28rpx;
+  color: var(--text);
+  border: none;
+  resize: none;
+}
+
+.content-count {
+  text-align: right;
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-top: 12rpx;
+}
+
+.submit-wrap {
+  margin: 32rpx 24rpx;
+}
+
+.btn-primary.disabled {
+  opacity: 0.6;
+}

@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AlignerPRD · 康元方舟陪诊师端 v1</title>
+<style>
+  :root{
+    --c-bg:#FAFAF8;--c-text-1:#1F2328;--c-text-2:#475467;--c-text-3:#98A2B3;
+    --c-border:#E5E7EB;--c-blue:#10B981;--c-blue-tint:rgba(16,185,129,0.08);
+    --c-orange:#F59E0B;--c-danger:#DC2626;--c-success:#1aae39;
+    --primary:#10B981;--primary-light:#d1fae5;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:-apple-system,"PingFang SC","Helvetica Neue",sans-serif;background:var(--c-bg);color:var(--c-text-1);font-size:14px;line-height:1.5}
+
+  /* ============ 双面板布局 · Demo 在左 / PRD 在右 ============ */
+  .app{display:grid;grid-template-columns:1fr 540px;height:100vh;transition:grid-template-columns .25s ease}
+  @media (max-width:1400px){.app{grid-template-columns:1fr 460px}}
+  /* 视图模式 · 只看 Demo（PRD 隐藏，Demo 全屏居中） */
+  .app.demo-only{grid-template-columns:1fr 0}
+  .app.demo-only .prd-panel{display:none !important}
+
+  /* ============ 视图模式切换器（左下角悬浮） ============ */
+  .view-switcher{position:fixed;left:14px;bottom:14px;z-index:9998;display:inline-flex;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);border:1px solid var(--c-border);border-radius:9999px;padding:3px;box-shadow:0 6px 18px rgba(0,0,0,0.08)}
+  .view-switcher button{border:0;background:transparent;padding:6px 14px;font-size:12px;color:var(--c-text-2);border-radius:9999px;cursor:pointer;font-weight:600;transition:all .15s}
+  .view-switcher button.active{background:var(--c-blue);color:#fff;box-shadow:0 2px 6px rgba(16,185,129,0.3)}
+  .view-switcher button:hover:not(.active){color:var(--c-text-1)}
+
+  /* 左：Demo 面板 */
+  .demo-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#F4F7FF,#FAFBFF);overflow:auto}
+  .demo-title{font-size:13px;color:var(--c-text-3);margin-bottom:16px;letter-spacing:0.3px}
+  .phone{width:375px;height:812px;background:#fff;border-radius:40px;border:8px solid #1F2328;box-shadow:0 20px 60px rgba(0,0,0,0.15);overflow:hidden;position:relative}
+  .phone-screen{width:100%;height:100%;overflow-y:auto;position:relative;background:#FAFAFA}
+  .page{display:none;padding:16px;min-height:100%}
+  .page.active{display:block}
+  .page-header{padding:12px 0;font-size:18px;font-weight:700;color:#1F2328;border-bottom:1px solid #eee;margin-bottom:12px}
+  .rivet-anchor{transition:box-shadow .2s,background-color .2s;border-radius:8px;padding:12px;margin-bottom:10px;background:#fff;border:1px solid var(--c-border);cursor:pointer}
+  .rivet-anchor:hover{border-color:var(--c-blue)}
+  .rivet-anchor.pulse{animation:rivetPulse 1.2s ease-out 2;box-shadow:0 0 0 3px rgba(16,185,129,0.4)}
+  @keyframes rivetPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.6)}50%{box-shadow:0 0 0 8px rgba(16,185,129,0)}}
+  .anchor-title{font-size:14px;font-weight:600;margin-bottom:4px}
+  .anchor-desc{font-size:12px;color:#666}
+  .anchor-meta{display:flex;gap:8px;margin-top:6px}
+  .anchor-tag{font-size:10px;padding:2px 6px;background:var(--primary-light);color:var(--c-blue);border-radius:4px}
+
+  /* Demo 内组件样式 */
+  .demo-banner{background:linear-gradient(135deg,#10B981,#059669);border-radius:12px;padding:16px;color:#fff;margin-bottom:12px}
+  .demo-banner h4{font-size:16px;margin-bottom:4px}
+  .demo-banner p{font-size:12px;opacity:0.9}
+  .demo-tabs{display:flex;gap:6px;margin-bottom:12px}
+  .demo-tab{flex:1;text-align:center;padding:8px 0;font-size:13px;border-radius:20px;background:#fff;border:1px solid #eee;cursor:pointer}
+  .demo-tab.active{background:var(--c-blue);color:#fff;border-color:var(--c-blue)}
+  .demo-nav{position:absolute;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #eee;display:flex;padding:8px 0}
+  .demo-nav-item{flex:1;text-align:center;font-size:11px;color:#999;cursor:pointer}
+  .demo-nav-item.active{color:var(--c-blue)}
+  .demo-nav-icon{width:20px;height:20px;margin:0 auto 2px;background:#eee;border-radius:4px}
+
+  /* 右：PRD 面板 */
+  .prd-panel{background:#fff;border-left:1px solid var(--c-border);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  .prd-header{padding:14px 16px;border-bottom:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0}
+  .prd-header h2{font-size:15px;font-weight:800}
+  .prd-header .badge{font-size:10px;padding:2px 8px;background:var(--c-blue-tint);color:var(--c-blue);border-radius:9999px;font-weight:700}
+  .prd-tools{display:flex;gap:6px}
+  .tool-btn{padding:5px 10px;font-size:11px;border:1px solid var(--c-border);border-radius:6px;background:#fff;cursor:pointer;color:var(--c-text-2)}
+  .tool-btn:hover{border-color:var(--c-blue);color:var(--c-blue)}
+  .prd-body{flex:1;overflow-y:auto;padding:14px 16px}
+
+  /* Meta 章节通用样式 */
+  .meta-section{margin-bottom:12px}
+  .meta-header{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;background:linear-gradient(135deg,#1F2937,#059669);color:#fff;cursor:pointer;user-select:none}
+  .meta-header .toggle{font-size:12px;color:rgba(255,255,255,0.85);transition:transform .15s;width:14px}
+  .meta-header.collapsed .toggle{transform:rotate(-90deg)}
+  .meta-header h3{font-size:14px;font-weight:800;flex:1}
+  .meta-header .count{font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:9999px}
+  .meta-content{padding:12px 4px 8px}
+  .meta-content.collapsed{display:none}
+  .meta-block{margin-bottom:12px}
+  .meta-block h5{font-size:11px;font-weight:800;color:var(--c-text-2);margin-bottom:6px}
+  .meta-block p{font-size:12.5px;line-height:1.65;background:#FAFAF8;padding:8px 10px;border-radius:6px}
+  .pain-list{font-size:12px;line-height:1.7;padding-left:18px;color:var(--c-text-2)}
+
+  /* 用户故事 */
+  .story-card{display:flex;gap:10px;background:linear-gradient(135deg,#FAFBFF,#F0FDF4);border:1px solid #D1FAE5;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .story-idx{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--c-blue);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .story-line{display:flex;gap:6px;font-size:12px;line-height:1.55}
+  .sl-key{flex-shrink:0;font-weight:800;color:var(--c-blue);min-width:50px;font-size:10.5px;font-style:italic}
+
+  /* 场景卡 */
+  .scenario-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .scenario-card{display:flex;gap:8px;background:#fff;border:1px solid var(--c-border);border-radius:8px;padding:8px 10px}
+  .scn-idx{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--c-blue-tint);color:var(--c-blue);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .scn-name{font-size:12px;font-weight:700;margin-bottom:2px}
+  .scn-desc{font-size:11px;color:var(--c-text-2)}
+
+  /* 指标表 */
+  .aux-table{width:100%;border-collapse:collapse;font-size:11.5px;background:#fff;border-radius:6px;overflow:hidden;border:1px solid var(--c-border)}
+  .aux-table th{text-align:left;font-weight:700;padding:6px 8px;background:var(--c-bg);font-size:10px}
+  .aux-table td{padding:6px 8px;border-bottom:1px solid var(--c-border)}
+  .aux-table strong{color:var(--c-blue)}
+
+  /* 用户价值列表 */
+  .value-list{font-size:12px;line-height:1.7;list-style:none;padding-left:0}
+  .value-list li{padding:5px 10px;background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border-left:3px solid var(--c-orange);border-radius:6px;margin-bottom:4px;color:#7C2D12}
+
+  /* 不做的事 */
+  .not-doing-list{font-size:11.5px;list-style:none;padding-left:0}
+  .not-doing-list li{padding:5px 10px;background:rgba(220,38,38,0.06);border-left:3px solid var(--c-danger);border-radius:6px;margin-bottom:4px;color:#7F1D1D}
+  .future-list{font-size:11.5px;list-style:none;padding-left:0}
+  .future-list li{padding:5px 10px;background:rgba(16,185,129,0.06);border-left:3px solid var(--c-blue);border-radius:6px;margin-bottom:4px;color:#166534}
+
+  /* §5 功能分隔栏 */
+  .features-divider{display:flex;justify-content:space-between;padding:10px 14px;border-radius:10px;background:#F3F4F6;border:1px dashed var(--c-border);margin:8px 0}
+  .features-divider h3{font-size:13px;font-weight:800}
+
+  /* 功能卡片 */
+  .prd-page-group{margin-bottom:10px}
+  .prd-page-header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#F4F4F5;border-radius:8px;cursor:pointer;user-select:none}
+  .prd-page-header h4{font-size:13px;font-weight:700;flex:1}
+  .prd-page-header .toggle-icon{transition:transform .15s}
+  .prd-page-header.collapsed .toggle-icon{transform:rotate(-90deg)}
+  .prd-page-body{padding:8px 0;display:none}
+  .prd-page-body.expanded{display:block}
+  .prd-card{background:#fff;border:1px solid var(--c-border);border-left:3px solid var(--c-text-3);border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+  .prd-card:hover{border-color:var(--c-blue)}
+  .prd-card.p0{border-left-color:var(--c-danger)}
+  .prd-card.p1{border-left-color:var(--c-orange)}
+  .prd-card.active{border-color:var(--c-blue);box-shadow:0 0 0 2px rgba(16,185,129,0.15)}
+  .card-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .card-title h5{font-size:13px;font-weight:700}
+  .priority-tag{font-size:9px;padding:1px 6px;border-radius:3px;font-weight:800;color:#fff}
+  .priority-tag.p0{background:var(--c-danger)}
+  .priority-tag.p1{background:var(--c-orange)}
+  .priority-tag.p2{background:var(--c-text-3)}
+  .card-desc{font-size:12px;color:var(--c-text-2);line-height:1.5}
+  .card-ac{font-size:11px;color:var(--c-text-3);margin-top:6px;padding:6px 8px;background:#F9FAFB;border-radius:4px}
+
+  /* 水印 */
+  .xm-watermark{position:fixed;right:14px;bottom:14px;padding:5px 12px;font-size:11px;color:rgba(60,60,67,0.55);background:rgba(255,255,255,0.78);backdrop-filter:blur(8px);border-radius:9999px;pointer-events:none;z-index:9999}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- 左：Demo 面板（移动端 phone shell） -->
+  <main class="demo-panel">
+    <div class="demo-title">📱 康元方舟陪诊师端 · 移动端 Demo</div>
+    <div class="phone">
+      <div class="phone-screen">
+        <!-- 服务页 -->
+        <section class="page active" data-route="service">
+          <div class="demo-banner">
+            <h4>专业陪诊服务</h4>
+            <p>让就医更轻松，让陪伴更温暖</p>
+          </div>
+          
+          <div class="demo-tabs">
+            <div class="demo-tab active" onclick="switchTab(this, 'wait')">待服务</div>
+            <div class="demo-tab" onclick="switchTab(this, 'running')">服务中</div>
+            <div class="demo-tab" onclick="switchTab(this, 'done')">已完成</div>
+          </div>
+
+          <div id="order-list">
+            <div class="rivet-anchor" data-section-id="F1">
+              <div class="anchor-title">F1 · 待服务订单列表</div>
+              <div class="anchor-desc">展示已分配但未开始的订单，支持查看详情</div>
+              <div class="anchor-meta">
+                <span class="anchor-tag">订单卡片</span>
+                <span class="anchor-tag">空态引导</span>
+              </div>
+            </div>
+            
+            <div class="rivet-anchor" data-section-id="F2">
+              <div class="anchor-title">F2 · 订单详情</div>
+              <div class="anchor-desc">服务信息、就诊人信息、开始服务入口</div>
+              <div class="anchor-meta">
+                <span class="anchor-tag">服务信息</span>
+                <span class="anchor-tag">联系方式</span>
+              </div>
+            </div>
+
+            <div class="rivet-anchor" data-section-id="F3">
+              <div class="anchor-title">F3 · 开始服务</div>
+              <div class="anchor-desc">一键开始服务，订单状态变为服务中</div>
+              <div class="anchor-meta">
+                <span class="anchor-tag">无需定位</span>
+              </div>
+            </div>
+
+            <div class="rivet-anchor" data-section-id="F4">
+              <div class="anchor-title">F4 · 发送短信通知</div>
+              <div class="anchor-desc">预设模板发送短信通知就诊人</div>
+              <div class="anchor-meta">
+                <span class="anchor-tag">3个模板</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 服务中页 -->
+        <section class="page" data-route="running">
+          <div class="page-header">服务中</div>
+          
+          <div class="rivet-anchor" data-section-id="F5">
+            <div class="anchor-title">F5 · 服务过程记录</div>
+            <div class="anchor-desc">文字描述、上传凭证、实时计时</div>
+            <div class="anchor-meta">
+              <span class="anchor-tag">限500字</span>
+              <span class="anchor-tag">最多3张图</span>
+            </div>
+          </div>
+
+          <div class="rivet-anchor" data-section-id="F6">
+            <div class="anchor-title">F6 · 服务完成</div>
+            <div class="anchor-desc">一键完成服务，订单状态变为已完成</div>
+            <div class="anchor-meta">
+              <span class="anchor-tag">无需确认</span>
+            </div>
+          </div>
+
+          <div class="rivet-anchor" data-section-id="F7">
+            <div class="anchor-title">F7 · 取消订单</div>
+            <div class="anchor-desc">异常情况时可取消，需填写原因</div>
+            <div class="anchor-meta">
+              <span class="anchor-tag">3种原因</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 我的页 -->
+        <section class="page" data-route="mine">
+          <div class="page-header">我的</div>
+          
+          <div class="rivet-anchor" data-section-id="F8">
+            <div class="anchor-title">F8 · 服务单量统计</div>
+            <div class="anchor-desc">本月接单、累计服务、进行中数</div>
+            <div class="anchor-meta">
+              <span class="anchor-tag">数据看板</span>
+            </div>
+          </div>
+
+          <div class="rivet-anchor" data-section-id="F9">
+            <div class="anchor-title">F9 · 我的设置</div>
+            <div class="anchor-desc">基本信息、服务时间、服务费用设置</div>
+            <div class="anchor-meta">
+              <span class="anchor-tag">全局定价</span>
+            </div>
+          </div>
+        </section>
+      </div>
+      
+      <!-- 底部导航 -->
+      <div class="demo-nav">
+        <div class="demo-nav-item active" onclick="goto('service')">
+          <div class="demo-nav-icon" style="background:var(--c-blue)"></div>
+          <div>服务</div>
+        </div>
+        <div class="demo-nav-item" onclick="goto('mine')">
+          <div class="demo-nav-icon"></div>
+          <div>我的</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- 右：PRD 面板（Rina 9 章节） -->
+  <aside class="prd-panel" role="complementary">
+    <div class="prd-header">
+      <h2>📋 PRD <span class="badge">康元方舟 v1</span></h2>
+      <div class="prd-tools">
+        <button class="tool-btn" onclick="exportPRD()">📋 导出</button>
+      </div>
+    </div>
+    <div class="prd-body">
+
+      <!-- §1 需求背景 -->
+      <div class="meta-section">
+        <div class="meta-header" onclick="toggleGroup(this)">
+          <span class="toggle">▾</span><h3>📌 1. 需求背景</h3><span class="count">v1</span>
+        </div>
+        <div class="meta-content">
+          <div class="meta-block">
+            <h5>📈 业务背景</h5>
+            <p>康元方舟是专业陪诊服务平台，需要为陪诊师提供移动端工具，用于接单、服务记录、工单回填和个人信息管理。</p>
+          </div>
+          <div class="meta-block">
+            <h5>🎯 现状与痛点</h5>
+            <ul class="pain-list">
+              <li>痛点 1：陪诊师缺乏统一的订单管理工具，沟通效率低</li>
+              <li>痛点 2：服务过程缺乏标准化记录，服务质量难以追踪</li>
+              <li>痛点 3：就诊凭证管理分散，无法形成完整服务档案</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- §2 目标用户 & 场景 -->
+      <div class="meta-section">
+        <div class="meta-header" onclick="toggleGroup(this)">
+          <span class="toggle">▾</span><h3>🎯 2. 目标用户 &amp; 场景</h3><span class="count">4 场景</span>
+        </div>
+        <div class="meta-content">
+          <div class="meta-block">
+            <h5>👤 主要用户</h5>
+            <p>已入驻康元方舟平台的陪诊师，年龄 25-50 岁，女性占比 70%，使用频率为日均 2-5 单</p>
+          </div>
+          <div class="meta-block">
+            <h5>🌐 核心场景</h5>
+            <div class="scenario-grid">
+              <div class="scenario-card"><span class="scn-idx">1</span><div><div class="scn-name">接单服务</div><div class="scn-desc">收到派单 → 查看详情 → 开始服务</div></div></div>
+              <div class="scenario-card"><span class="scn-idx">2</span><div><div class="scn-name">服务过程</div><div class="scn-desc">陪同就诊 → 记录过程 → 上传凭证</div></div></div>
+              <div class="scenario-card"><span class="scn-idx">3</span><div><div class="scn-name">服务完成</div><div class="scn-desc">结束服务 → 查看统计数据</div></div></div>
+              <div class="scenario-card"><span class="scn-idx">4</span><div><div class="scn-name">个人管理</div><div class="scn-desc">维护信息 → 设置时间和费用</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- §3 用户故事 -->
+      <div class="meta-section">
+        <div class="meta-header" onclick="toggleGroup(this)">
+          <span class="toggle">▾</span><h3>👥 3. 用户故事</h3><span class="count">5 个</span>
+        </div>
+        <div class="meta-content">
+          <div class="story-card">
+            <span class="story-idx">#1</span>
+            <div>
+              <div class="story-line"><span class="sl-key">As a</span><span>陪诊师</span></div>
+              <div class="story-line"><span class="sl-key">I want</span><span>快速查看待服务订单详情</span></div>
+              <div class="story-line"><span class="sl-key">so that</span><span>提前做好服务准备</span></div>
+            </div>
+          </div>
+          <div class="story-card">
+            <span class="story-idx">#2</span>
+            <div>
+              <div class="story-line"><span class="sl-key">As a</span><span>陪诊师</span></div>
+              <div class="story-line"><span class="sl-key">I want</span><span>一键发送短信通知就诊人</span></div>
+              <div class="story-line"><span class="sl-key">so that</span><span>高效沟通预约信息</span></div>
+            </div>
+          </div>
+          <div class="story-card">
+            <span class="story-idx">#3</span>
+            <div>
+              <div class="story-line"><span class="sl-key">As a</span><span>陪诊师</span></div>
+              <div class="story-line"><span class="sl-key">I want</span><span>记录服务过程并上传凭证</span></div>
+              <div class="story-line"><span class="sl-key">so that</span><span>形成完整服务档案</span></div>
+            </div>
+          </div>
+          <div class="story-card">
+            <span class="story-idx">#4</span>
+            <div>
+              <div class="story-line"><span class="sl-key">As a</span><span>陪诊师</span></div>
+              <div class="story-line"><span class="sl-key">I want</span><span>查看服务统计数据</span></div>
+              <div class="story-line"><span class="sl-key">so that</span><span>了解个人服务表现</span></div>
+            </div>
+          </div>
+          <div class="story-card">
+            <span class="story-idx">#5</span>
+            <div>
+              <div class="story-line"><span class="sl-key">As a</span><span>陪诊师</span></div>
+              <div class="story-line"><span class="sl-key">I want</span><span>灵活设置服务时间和费用</span></div>
+              <div class="story-line"><span class="sl-key">so that</span><span>合理安排工作节奏</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- §4 预期收益 -->
+      <div class="meta-section">
+        <div class="meta-header collapsed" onclick="toggleGroup(this)">
+          <span class="toggle">▾</span><h3>📈 4. 预期收益</h3><span class="count">3 指标</span>
+        </div>
+        <div class="meta-content collapsed">
+          <div class="meta-block">
+            <h5>📊 4.1 指标收益（含⭐北极星）</h5>
+            <table class="aux-table">
+              <thead><tr><th>指标</th><th>当前</th><th>目标</th><th>变化</th><th>周期</th></tr></thead>
+              <tbody>
+                <tr><td>⭐ 订单完成率</td><td>85%</td><td><strong>92%</strong></td><td><strong style="color:#DC2626">+7pp</strong></td><td>4 周</td></tr>
+                <tr><td>服务记录完整度</td><td>60%</td><td><strong>90%</strong></td><td>+30pp</td><td>8 周</td></tr>
+                <tr><td>陪诊师活跃度</td><td>70%</td><td><strong>85%</strong></td><td>+15pp</td><td>4 周</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="meta-block">
+            <h5>❤️ 4.2 用户价值收益</h5>
+            <ul class="value-list">
+              <li>【解决痛点】订单管理分散 → 统一入口，一目了然</li>
+              <li>【解决痛点】服务记录难追踪 → 标准化流程，完整档案</li>
+              <li>【体验提升】减少沟通成本 / 提升服务效率</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- §5 功能描述 -->
+      <div class="meta-section">
+        <div class="features-divider"><h3>🧩 5. 功能描述</h3><span class="count">3 页 / 9 功能</span></div>
+      </div>
+
+      <!-- 服务页 -->
+      <div class="prd-page-group">
+        <div class="prd-page-header" onclick="togglePageGroup(this)">
+          <span class="toggle-icon">▾</span><h4>📱 服务页</h4>
+        </div>
+        <div class="prd-page-body expanded">
+          <div class="prd-card p0" data-section-id="F1" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F1 · 待服务订单列表</h5><span class="priority-tag p0">P0</span></div>
+            <div class="card-desc">展示已分配但未开始的订单，支持查看详情、联系就诊人</div>
+            <div class="card-ac">✅ 空态：显示引导文案「暂无待服务订单，请等待平台派单」</div>
+          </div>
+          <div class="prd-card p0" data-section-id="F2" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F2 · 订单详情</h5><span class="priority-tag p0">P0</span></div>
+            <div class="card-desc">展示服务信息、就诊人信息，提供开始服务、联系入口</div>
+            <div class="card-ac">✅ 服务类型：全程陪诊、取药陪诊、检查陪诊</div>
+          </div>
+          <div class="prd-card p0" data-section-id="F3" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F3 · 开始服务</h5><span class="priority-tag p0">P0</span></div>
+            <div class="card-desc">一键开始服务，订单状态变为「服务中」</div>
+            <div class="card-ac">✅ 无需定位校验，直接点击即可</div>
+          </div>
+          <div class="prd-card p1" data-section-id="F4" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F4 · 发送短信通知</h5><span class="priority-tag p1">P1</span></div>
+            <div class="card-desc">通过预设模板发送短信通知就诊人</div>
+            <div class="card-ac">✅ 3个模板：预约提醒、服务进行中、服务完成</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 服务中页 -->
+      <div class="prd-page-group">
+        <div class="prd-page-header collapsed" onclick="togglePageGroup(this)">
+          <span class="toggle-icon">▾</span><h4>⏱️ 服务中</h4>
+        </div>
+        <div class="prd-page-body">
+          <div class="prd-card p0" data-section-id="F5" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F5 · 服务过程记录</h5><span class="priority-tag p0">P0</span></div>
+            <div class="card-desc">记录服务过程，上传就诊凭证，实时计时</div>
+            <div class="card-ac">✅ 文字限500字 | 图片最多3张 | 单张≤10MB</div>
+          </div>
+          <div class="prd-card p0" data-section-id="F6" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F6 · 服务完成</h5><span class="priority-tag p0">P0</span></div>
+            <div class="card-desc">一键完成服务，订单状态变为「已完成」</div>
+            <div class="card-ac">✅ 无需就诊人确认，陪诊师点击即结束</div>
+          </div>
+          <div class="prd-card p1" data-section-id="F7" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F7 · 取消订单</h5><span class="priority-tag p1">P1</span></div>
+            <div class="card-desc">服务中状态遇到异常情况时可取消订单</div>
+            <div class="card-ac">✅ 原因：就诊人未到场、医院停诊、其他</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 我的页 -->
+      <div class="prd-page-group">
+        <div class="prd-page-header collapsed" onclick="togglePageGroup(this)">
+          <span class="toggle-icon">▾</span><h4>👤 我的</h4>
+        </div>
+        <div class="prd-page-body">
+          <div class="prd-card p1" data-section-id="F8" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F8 · 服务单量统计</h5><span class="priority-tag p1">P1</span></div>
+            <div class="card-desc">展示陪诊师服务统计数据</div>
+            <div class="card-ac">✅ 本月接单、累计服务、进行中数</div>
+          </div>
+          <div class="prd-card p1" data-section-id="F9" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F9 · 我的设置</h5><span class="priority-tag p1">P1</span></div>
+            <div class="card-desc">陪诊师个人信息和服务偏好设置</div>
+            <div class="card-ac">✅ 基本信息、服务时间、服务费用（全局生效）</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- §6 数据需求 -->
+      <div class="meta-section">
+        <div class="meta-header collapsed" onclick="toggleGroup(this)">
+          <span class="toggle">▾</span><h3>📊 6. 数据需求</h3>
+        </div>
+        <div class="meta-content collapsed">
+          <div class="meta-block">
+            <h5>📍 6.1 埋点（11 个事件）</h5>
+            <p style="font-size:11px">order_list_view / order_card_click / order_detail_view / service_start_click / service_start / sms_send / service_record_save / service_complete / order_cancel / stats_view / settings_save</p>
+          </div>
+          <div class="meta-block"><h5>📺 6.2 看板</h5><p>核心监控指标：订单完成率、服务记录完整度、陪诊师活跃度</p></div>
+        </div>
+      </div>
+
+      <!-- §7 非功能需求 -->
+      <div class="meta-section">
+        <div class="meta-header collapsed" onclick="toggleGroup(this)">
+          <span class="toggle">▾</span><h3>⚙️ 7. 非功能需求</h3>
+        </div>
+        <div class="meta-content collapsed">
+          <table class="aux-table">
+            <thead><tr><th>维度</th><th>要求</th></tr></thead>
+            <tbody>
+              <tr><td><strong>性能</strong></td><td>首屏 &lt; 2s / 交互 &lt; 100ms</td></tr>
+              <tr><td><strong>可访问性</strong></td><td>WCAG 2.1 AA / 触控 ≥ 44px</td></tr>
+              <tr><td><strong>兼容</strong></td><td>iOS 14+ / Android 9+ / 微信基础库 ≥ 2.30.0</td></tr>
+              <tr><td><strong>隐私</strong></td><td>身份证信息加密存储</td></tr>
+              <tr><td><strong>稳定性</strong></td><td>接口失败率 &lt; 1%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- §8 边界 & 不做的事 -->
+      <div class="meta-section">
+        <div class="meta-header collapsed" onclick="toggleGroup(this)">
+          <span class="toggle">▾</span><h3>🚧 8. 边界 &amp; 不做的事</h3>
+        </div>
+        <div class="meta-content collapsed">
+          <div class="meta-block"><h5>❌ 不做的事</h5>
+            <ul class="not-doing-list">
+              <li>本期不支持陪诊师自主接单（仅平台派单）</li>
+              <li>本期不支持就诊人端功能</li>
+              <li>本期不支持在线支付（线下结算）</li>
+              <li>本期不支持定位签到校验</li>
+            </ul>
+          </div>
+          <div class="meta-block"><h5>🔮 后续迭代考虑</h5>
+            <ul class="future-list">
+              <li>v1.1：支持陪诊师自主抢单</li>
+              <li>v1.2：定位签到校验功能</li>
+              <li>v2.0：就诊人端小程序</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- §9 遗留问题 -->
+      <div class="meta-section">
+        <div class="meta-header collapsed" onclick="toggleGroup(this)">
+          <span class="toggle">▾</span><h3>❓ 9. 遗留问题</h3>
+        </div>
+        <div class="meta-content collapsed">
+          <table class="aux-table">
+            <thead><tr><th>#</th><th>问题</th><th>状态</th><th>负责人</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>短信发送是否需要限制每日发送次数？</td><td>待定</td><td>产品</td></tr>
+              <tr><td>2</td><td>服务费用是否需要平台抽成？</td><td>待定</td><td>运营</td></tr>
+              <tr><td>3</td><td>取消订单是否影响陪诊师评分？</td><td>待定</td><td>产品</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </aside>
+</div>
+
+<div class="xm-watermark" aria-hidden="true">xiaomi created</div>
+
+<!-- 视图模式切换器：只看 Demo / Demo + PRD -->
+<div class="view-switcher" role="tablist" aria-label="视图模式">
+  <button id="vmBoth" class="active" role="tab" aria-selected="true" onclick="setViewMode('both')">📋 Demo + PRD</button>
+  <button id="vmDemo" role="tab" aria-selected="false" onclick="setViewMode('demo')">📱 只看 Demo</button>
+</div>
+
+<script>
+  // ============ 视图模式：only-demo / both ============
+  function setViewMode(mode){
+    var app = document.querySelector('.app');
+    var btnBoth = document.getElementById('vmBoth');
+    var btnDemo = document.getElementById('vmDemo');
+    if (mode === 'demo') {
+      app.classList.add('demo-only');
+      btnDemo.classList.add('active'); btnDemo.setAttribute('aria-selected','true');
+      btnBoth.classList.remove('active'); btnBoth.setAttribute('aria-selected','false');
+    } else {
+      app.classList.remove('demo-only');
+      btnBoth.classList.add('active'); btnBoth.setAttribute('aria-selected','true');
+      btnDemo.classList.remove('active'); btnDemo.setAttribute('aria-selected','false');
+    }
+    try { localStorage.setItem('aligner-view-mode', mode); } catch(e){}
+  }
+  (function initViewMode(){
+    try {
+      var saved = localStorage.getItem('aligner-view-mode');
+      if (saved === 'demo') setViewMode('demo');
+    } catch(e){}
+  })();
+
+  // 章节折叠
+  function toggleGroup(el){
+    el.classList.toggle('collapsed');
+    var content = el.nextElementSibling;
+    if (content) content.classList.toggle('collapsed');
+  }
+  function togglePageGroup(el){
+    el.classList.toggle('collapsed');
+    var body = el.nextElementSibling;
+    if (body) body.classList.toggle('expanded');
+  }
+
+  // Demo Tab 切换
+  function switchTab(el, status){
+    document.querySelectorAll('.demo-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    // 根据状态显示不同订单
+    if (status === 'running') {
+      goto('running');
+    } else if (status === 'done') {
+      goto('mine');
+    } else {
+      goto('service');
+    }
+  }
+
+  // Demo 页面切换
+  function goto(route){
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelector('.page[data-route="' + route + '"]').classList.add('active');
+    document.querySelectorAll('.demo-nav-item').forEach(n => n.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+  }
+
+  // hover PRD 卡片 → Demo 闪动
+  document.querySelectorAll('.prd-card').forEach(function(card){
+    card.addEventListener('mouseenter', function(){
+      var id = card.getAttribute('data-section-id');
+      var anchor = document.querySelector('.rivet-anchor[data-section-id="' + id + '"]');
+      if (anchor) {
+        var page = anchor.closest('.page');
+        if (page) {
+          document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+          page.classList.add('active');
+        }
+        anchor.scrollIntoView({behavior:'smooth', block:'center'});
+        anchor.classList.remove('pulse'); void anchor.offsetWidth; anchor.classList.add('pulse');
+      }
+    });
+  });
+
+  // click Demo 区块 → PRD 滚动到对应卡片
+  document.querySelectorAll('.rivet-anchor').forEach(function(anchor){
+    anchor.addEventListener('click', function(){
+      var id = anchor.getAttribute('data-section-id');
+      var card = document.querySelector('.prd-card[data-section-id="' + id + '"]');
+      if (card) {
+        document.querySelectorAll('.prd-card.active').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        card.scrollIntoView({behavior:'smooth', block:'center'});
+      }
+    });
+  });
+
+  // PRD 卡片点击 → 同 hover
+  function rivetTo(card){
+    var id = card.getAttribute('data-section-id');
+    var anchor = document.querySelector('.rivet-anchor[data-section-id="' + id + '"]');
+    if (anchor) {
+      var page = anchor.closest('.page');
+      if (page) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        page.classList.add('active');
+      }
+      anchor.scrollIntoView({behavior:'smooth', block:'center'});
+      anchor.classList.add('pulse');
+    }
+    document.querySelectorAll('.prd-card.active').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+  }
+
+  // 导出 PRD
+  function exportPRD(){
+    var md = document.querySelector('.prd-body').innerText;
+    var blob = new Blob([md], {type:'text/markdown'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'PRD-康元方舟陪诊师端-v1.md';
+    a.click();
+  }
+</script>
+</body>
+</html>

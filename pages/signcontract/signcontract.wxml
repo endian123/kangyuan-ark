@@ -1,0 +1,46 @@
+<view class="page signcontract-page safe-bottom">
+  <view class="card contract-content">
+    <view class="contract-title">康元方舟陪诊师入驻电子协议</view>
+    <view class="contract-body">
+      <view class="paragraph">一、协议双方</view>
+      <view class="paragraph">甲方：康元方舟陪诊服务平台（以下简称“平台”）。乙方：申请入驻并通过审核的陪诊师（以下简称“乙方”）。</view>
+      <view class="paragraph">二、服务内容</view>
+      <view class="paragraph">乙方按照平台规则及用户订单要求，为用户提供就医陪同、取药、检查引导等陪诊服务，并如实回填服务工单。</view>
+      <view class="paragraph">三、服务规范</view>
+      <view class="paragraph">乙方应遵守国家法律法规，保护用户隐私，不得泄露用户病历、联系方式等敏感信息。服务过程中应文明礼貌、按时履约。</view>
+      <view class="paragraph">四、收益结算</view>
+      <view class="paragraph">平台按照订单实际完成情况及平台公示的分成比例，在订单完成后的一定周期内向乙方结算服务费用。</view>
+      <view class="paragraph">五、违约责任</view>
+      <view class="paragraph">如乙方存在虚假回填、泄露用户信息、无故爽约等行为，平台有权依据规则进行处罚，包括但不限于扣除费用、暂停接单、终止合作等。</view>
+      <view class="paragraph">六、其他</view>
+      <view class="paragraph">本协议自乙方在线签署之日起生效。平台保留根据业务发展适时修订本协议的权利，修订后将通过适当方式通知乙方。</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="section-title">电子签名</view>
+    <view class="sign-wrap">
+      <canvas
+        id="contractSignCanvas"
+        canvas-id="contractSignCanvas"
+        class="sign-canvas"
+        bindtouchstart="touchStart"
+        bindtouchmove="touchMove"
+      ></canvas>
+      <view class="sign-tips">请在上方空白处手写签名</view>
+    </view>
+    <view class="sign-actions">
+      <view class="btn-plain" bindtap="clearSign">清空</view>
+      <view class="btn-ghost" bindtap="saveSign">保存签名</view>
+    </view>
+    <view wx:if="{{signImage}}" class="sign-preview">
+      <image src="{{signImage}}" mode="aspectFit"></image>
+    </view>
+  </view>
+
+  <view class="submit-wrap">
+    <view class="btn-primary {{submitting ? 'disabled' : ''}}" bindtap="submitSign">
+      {{submitting ? '提交中...' : '确认签署协议'}}
+    </view>
+  </view>
+</view>

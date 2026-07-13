@@ -1,0 +1,90 @@
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(112rpx + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: #ffffff;
+  border-top: 2rpx solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  z-index: 1000;
+}
+
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 112rpx;
+  color: #999999;
+}
+
+.tab-item.active {
+  color: #07c160;
+}
+
+.icon {
+  width: 44rpx;
+  height: 44rpx;
+  margin-bottom: 6rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-service {
+  width: 36rpx;
+  height: 32rpx;
+  border: 4rpx solid #999999;
+  border-radius: 6rpx;
+  position: relative;
+}
+
+.icon-service::before {
+  content: '';
+  position: absolute;
+  top: 10rpx;
+  left: -6rpx;
+  width: 44rpx;
+  height: 4rpx;
+  background: #999999;
+}
+
+.active .icon-service,
+.active .icon-service::before {
+  border-color: #07c160;
+  background: #07c160;
+}
+
+.icon-mine {
+  width: 32rpx;
+  height: 32rpx;
+  border: 4rpx solid #999999;
+  border-radius: 50%;
+  position: relative;
+}
+
+.icon-mine::before {
+  content: '';
+  position: absolute;
+  bottom: -14rpx;
+  left: -10rpx;
+  width: 48rpx;
+  height: 24rpx;
+  border: 4rpx solid #999999;
+  border-top: none;
+  border-radius: 0 0 24rpx 24rpx;
+}
+
+.active .icon-mine,
+.active .icon-mine::before {
+  border-color: #07c160;
+}
+
+.text {
+  font-size: 22rpx;
+  line-height: 1;
+}

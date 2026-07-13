@@ -1,0 +1,32 @@
+<view class="page smslist-page">
+  <view class="page-header">
+    <text class="back-btn" bindtap="goBack">‹</text>
+    <text class="page-title">短信列表</text>
+  </view>
+
+  <view class="tabs">
+    <view class="tab {{currentTab === 0 ? 'active' : ''}}" data-idx="0" bindtap="switchTab">全部</view>
+    <view class="tab {{currentTab === 1 ? 'active' : ''}}" data-idx="1" bindtap="switchTab">已发送</view>
+    <view class="tab {{currentTab === 2 ? 'active' : ''}}" data-idx="2" bindtap="switchTab">发送中</view>
+  </view>
+
+  <view class="sms-list">
+    <block wx:for="{{filteredSms}}" wx:key="id">
+      <view class="sms-card card">
+        <view class="sms-head">
+          <text class="sms-name">{{item.patient}}</text>
+          <text class="sms-status {{item.status}}">{{item.status === 'sent' ? '已发送' : '发送中'}}</text>
+        </view>
+        <view class="sms-content">{{item.content}}</view>
+        <view class="sms-foot">
+          <text class="sms-time">{{item.time}}</text>
+          <text class="sms-phone">{{item.phone}}</text>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <view class="empty" wx:if="{{filteredSms.length === 0}}">
+    <text>暂无短信记录</text>
+  </view>
+</view>

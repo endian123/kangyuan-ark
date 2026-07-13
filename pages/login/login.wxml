@@ -1,0 +1,58 @@
+<view class="login-page">
+  <!-- Logo区域 -->
+  <view class="logo-section">
+    <view class="logo-wrap">
+      <view class="logo-icon">
+        <text class="logo-heart">♥</text>
+        <view class="logo-pulse"></view>
+      </view>
+    </view>
+    <view class="brand-name">康元方舟</view>
+    <view class="brand-slogan">专业陪诊服务平台</view>
+  </view>
+
+  <!-- 授权按钮 -->
+  <view class="auth-section">
+    <button class="btn-wechat" open-type="getPhoneNumber" bindgetphonenumber="onGetPhoneNumber">
+      <view class="wechat-icon">
+        <text class="icon-wechat">微信</text>
+      </view>
+      <text>微信一键授权登录</text>
+    </button>
+    <view class="btn-manual" bindtap="onManualLogin">
+      <text>手机号登录</text>
+    </view>
+  </view>
+
+  <!-- 协议 -->
+  <view class="agree-section">
+    <checkbox checked="{{agreed}}" bindtap="onAgreeChange" color="#10B981"/>
+    <text class="agree-text">登录即表示同意</text>
+    <text class="agree-link" bindtap="showPrivacy">《用户协议》</text>
+    <text class="agree-text">与</text>
+    <text class="agree-link" bindtap="showPrivacy">《隐私政策》</text>
+  </view>
+
+  <!-- 手机号登录弹窗 -->
+  <view class="mask" wx:if="{{showPhoneModal}}" bindtap="closePhoneModal"></view>
+  <view class="phone-modal" wx:if="{{showPhoneModal}}">
+    <view class="modal-header">
+      <text class="modal-title">手机号登录</text>
+      <text class="modal-close" bindtap="closePhoneModal">×</text>
+    </view>
+    <view class="modal-body">
+      <view class="phone-input-wrap">
+        <input class="phone-input" type="number" placeholder="请输入手机号" maxlength="11" value="{{phone}}" bindinput="onPhoneInput"/>
+      </view>
+      <view class="code-row">
+        <input class="code-input" type="number" placeholder="验证码" maxlength="6" value="{{code}}" bindinput="onCodeInput"/>
+        <view class="btn-get-code {{codeSent && countdown > 0 ? 'disabled' : ''}}" bindtap="getVerifyCode">
+          {{codeSent && countdown > 0 ? countdown + 's' : '获取验证码'}}
+        </view>
+      </view>
+    </view>
+    <view class="modal-footer">
+      <view class="btn-confirm {{canSubmit ? '' : 'disabled'}}" bindtap="submitPhoneLogin">确认登录</view>
+    </view>
+  </view>
+</view>

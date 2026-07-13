@@ -1,0 +1,53 @@
+.settings-page {
+  padding-bottom: 160rpx;
+}
+
+.menu-card {
+  margin-top: 24rpx;
+  padding: 8rpx 28rpx;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+}
+
+.menu-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 18rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #fff;
+  margin-right: 20rpx;
+}
+
+.menu-icon.blue { background: #1890ff; }
+.menu-icon.orange { background: #fa8c16; }
+.menu-icon.purple { background: #722ed1; }
+
+.menu-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-text .label {
+  font-size: 30rpx;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.menu-text .desc {
+  font-size: 24rpx;
+  color: var(--text-light);
+  margin-top: 6rpx;
+}
+
+.menu-arrow {
+  font-size: 40rpx;
+  color: #ccc;
+}

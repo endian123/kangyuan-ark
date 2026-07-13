@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AlignerPRD · 康元方舟陪诊师端 v1</title>
+<style>
+  /* ============ CSS 变量 ============ */
+  :root{
+    --c-bg:#FAFAF8;--c-text-1:#1F2328;--c-text-2:#475467;--c-text-3:#98A2B3;
+    --c-border:#E5E7EB;--c-blue:#10B981;--c-blue-tint:rgba(16,185,129,0.08);
+    --c-orange:#F59E0B;--c-danger:#DC2626;--c-success:#1aae39;
+    --primary:#10B981;--primary-dark:#059669;--primary-light:#d1fae5;
+    --text:#333;--text-secondary:#666;--text-light:#999;
+    --bg:#f5f7fa;--card:#fff;--border:#eee;--danger:#ff4d4f;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC',sans-serif;background:#e8eaf0;overflow:hidden}
+
+  /* ============ 双面板布局 ============ */
+  .app{display:grid;grid-template-columns:1fr 540px;height:100vh;transition:grid-template-columns .25s ease}
+  @media(max-width:1400px){.app{grid-template-columns:1fr 460px}}
+  .app.demo-only{grid-template-columns:1fr 0}
+  .app.demo-only .prd-panel{display:none!important}
+
+  /* ============ 视图模式切换器 ============ */
+  .view-switcher{position:fixed;left:14px;bottom:14px;z-index:9998;display:inline-flex;background:rgba(255,255,255,0.92);backdrop-filter:blur(10px);border:1px solid var(--c-border);border-radius:9999px;padding:3px;box-shadow:0 6px 18px rgba(0,0,0,0.08)}
+  .view-switcher button{border:0;background:transparent;padding:6px 14px;font-size:12px;color:var(--c-text-2);border-radius:9999px;cursor:pointer;font-weight:600;transition:all .15s}
+  .view-switcher button.active{background:var(--c-blue);color:#fff;box-shadow:0 2px 6px rgba(16,185,129,0.3)}
+  .view-switcher button:hover:not(.active){color:var(--c-text-1)}
+
+  /* ============ 左：Demo 面板 ============ */
+  .demo-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#F4F7FF,#FAFBFF);overflow:auto}
+  .demo-title{font-size:13px;color:var(--c-text-3);margin-bottom:16px;letter-spacing:0.3px}
+  .phone{width:375px;height:812px;background:#fff;border-radius:40px;border:8px solid #1F2328;box-shadow:0 20px 60px rgba(0,0,0,0.15);overflow:hidden;position:relative;flex-shrink:0}
+  .phone-screen{width:100%;height:100%;overflow-y:auto;position:relative}
+
+  /* ============ Mobile Frame (preview.html 原始内容) ============ */
+  .mobile-frame{width:100%;height:100%;background:var(--bg);position:relative;overflow:hidden;display:flex;flex-direction:column}
+  .screen{flex:1;overflow-y:auto;position:relative;-webkit-overflow-scrolling:touch}
+  .hidden{display:none!important}
+  .card{background:var(--card);border-radius:16px;margin:12px;padding:16px;box-shadow:0 2px 12px rgba(0,0,0,0.04)}
+  .btn-primary{background:var(--primary);color:#fff;border-radius:24px;height:44px;line-height:44px;font-size:15px;font-weight:500;text-align:center;cursor:pointer}
+  .btn-ghost{background:var(--primary-light);color:var(--primary);border-radius:24px;height:44px;line-height:44px;font-size:15px;font-weight:500;text-align:center;cursor:pointer}
+  .btn-plain{background:#fff;color:var(--text);border:1px solid var(--border);border-radius:24px;height:36px;line-height:34px;font-size:13px;text-align:center;cursor:pointer;padding:0 16px}
+  .btn-sm{height:30px;line-height:30px;font-size:12px;padding:0 12px;border-radius:15px;display:inline-flex;align-items:center;justify-content:center}
+  .btn-plain.btn-sm{background:#fff;border:1px solid #e5e5e5;color:var(--text)}
+  .btn-ghost.btn-sm{background:var(--primary-light);color:var(--primary);border:none}
+  .btn-primary.btn-sm{background:var(--primary);color:#fff;border:none}
+  .tag{display:inline-flex;align-items:center;padding:2px 8px;border-radius:4px;font-size:11px}
+  .tag-wait{background:#fff7e6;color:#fa8c16}
+  .tag-running{background:#e6f7ff;color:#1890ff}
+  .tag-done{background:#f6ffed;color:#52c41a}
+  .divider{height:1px;background:var(--border);margin:14px 0}
+  .section-title{font-size:17px;font-weight:600;color:var(--text);margin-bottom:12px}
+
+  /* Login Page */
+  .login-page{min-height:100%;background:linear-gradient(180deg,#d1fae5 0%,#f5f7fa 60%,#fff 100%);display:flex;flex-direction:column;padding:0 24px}
+  .logo-section{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-top:80px}
+  .logo-wrap{position:relative;margin-bottom:16px}
+  .logo-icon{width:90px;height:90px;background:var(--primary);border-radius:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 12px 32px rgba(16,185,129,0.3);position:relative}
+  .logo-icon svg{width:48px;height:48px;fill:#fff}
+  .logo-pulse{position:absolute;inset:-8px;border:2px solid var(--primary);border-radius:28px;opacity:0.3;animation:pulse 2s ease-out infinite}
+  @keyframes pulse{0%{transform:scale(1);opacity:0.3}50%{transform:scale(1.1);opacity:0.1}100%{transform:scale(1);opacity:0.3}}
+  .brand-name{font-size:24px;font-weight:700;color:var(--text);margin-bottom:6px}
+  .brand-slogan{font-size:14px;color:var(--text-secondary)}
+  .auth-section{padding-bottom:60px}
+  .btn-wechat{width:100%;height:48px;background:var(--primary);border-radius:24px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-weight:500;margin-bottom:12px;box-shadow:0 4px 12px rgba(16,185,129,0.2);cursor:pointer}
+  .wechat-icon{width:20px;height:20px;background:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;margin-right:8px;font-size:10px;color:var(--primary);font-weight:600}
+  .btn-manual{width:100%;height:48px;background:#fff;border-radius:24px;display:flex;align-items:center;justify-content:center;color:var(--text);font-size:16px;border:1px solid var(--border);cursor:pointer}
+  .agree-section{display:flex;align-items:center;justify-content:center;padding-bottom:24px;font-size:12px}
+  .agree-section input{margin-right:6px;accent-color:var(--primary)}
+  .agree-text{color:var(--text-light)}
+  .agree-link{color:var(--primary);cursor:pointer}
+
+  /* Phone Login Modal */
+  .phone-modal{position:fixed;left:24px;right:24px;top:50%;transform:translateY(-50%);background:#fff;border-radius:16px;z-index:2001;overflow:hidden}
+  .modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border)}
+  .modal-tit{font-size:18px;font-weight:600}
+  .modal-close{font-size:24px;color:var(--text-light);cursor:pointer;line-height:1}
+  .modal-body2{padding:16px}
+  .phone-input{width:100%;height:48px;background:#f5f7fa;border-radius:8px;padding:0 12px;font-size:16px;border:none;margin-bottom:12px}
+  .code-row{display:flex;gap:8px}
+  .code-input{flex:1;height:48px;background:#f5f7fa;border-radius:8px;padding:0 12px;font-size:16px;border:none}
+  .btn-code{width:100px;height:48px;background:var(--primary);color:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer}
+  .btn-code.disabled{background:#ccc}
+  .modal-foot2{padding:8px 16px 16px}
+
+  /* TabBar */
+  .tabbar{height:56px;background:#fff;border-top:1px solid #f0f0f0;display:flex;align-items:center;z-index:1000;flex-shrink:0}
+  .tabbar-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#999;cursor:pointer}
+  .tabbar-item.active{color:var(--primary)}
+  .tabbar-icon{width:22px;height:22px;margin-bottom:3px;position:relative}
+  .tabbar-text{font-size:11px}
+  .icon-service{width:18px;height:16px;border:2px solid currentColor;border-radius:3px;position:absolute;top:2px;left:1px}
+  .icon-service::before{content:'';position:absolute;top:5px;left:-4px;width:22px;height:2px;background:currentColor}
+  .icon-mine{width:16px;height:16px;border:2px solid currentColor;border-radius:50%;position:absolute;top:2px;left:2px}
+  .icon-mine::before{content:'';position:absolute;bottom:-8px;left:-6px;width:24px;height:12px;border:2px solid currentColor;border-top:none;border-radius:0 0 12px 12px}
+
+  /* Banner Swiper */
+  .banner{width:calc(100% - 24px);height:140px;margin:12px auto;border-radius:16px;overflow:hidden;position:relative}
+  .banner-track{display:flex;transition:transform 0.5s ease;height:100%}
+  .banner-item{width:100%;height:100%;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;border-radius:16px}
+  .banner-bg1{background:linear-gradient(135deg,#10B981 0%,#059669 100%)}
+  .banner-bg2{background:linear-gradient(135deg,#3b82f6 0%,#1d4ed8 100%)}
+  .banner-bg3{background:linear-gradient(135deg,#f59e0b 0%,#d97706 100%)}
+  .banner-title{color:#fff;font-size:22px;font-weight:700;margin-bottom:8px}
+  .banner-desc{color:rgba(255,255,255,0.85);font-size:14px}
+  .banner-dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:8px}
+  .banner-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.4)}
+  .banner-dot.active{background:#fff}
+
+  /* Service */
+  .service-header{display:flex;align-items:center;justify-content:space-between;padding:24px 16px 12px}
+  .service-title{font-size:26px;font-weight:700}
+  .tab-wrap{display:flex;padding:6px;gap:6px}
+  .tab-item{flex:1;text-align:center;font-size:14px;color:var(--text-secondary);padding:10px 0;border-radius:24px;cursor:pointer}
+  .tab-item.active{background:var(--primary);color:#fff}
+  .order-card{margin-bottom:12px}
+  .order-head{display:flex;justify-content:space-between;margin-bottom:12px}
+  .order-id{font-size:13px;color:var(--text-light)}
+  .patient-row{display:flex;align-items:baseline;margin-bottom:12px}
+  .patient-name{font-size:18px;font-weight:600;margin-right:10px}
+  .patient-phone{font-size:13px;color:var(--text-secondary);flex:1}
+  .patient-price{font-size:17px;font-weight:600;color:var(--primary)}
+  .info-row{display:flex;font-size:13px;margin-bottom:6px}
+  .info-label{width:70px;color:var(--text-light)}
+  .info-value{flex:1;color:var(--text-secondary)}
+  .action-row{display:flex;justify-content:flex-end;gap:8px;margin-top:8px;flex-wrap:wrap}
+  .action-row .btn-plain,.action-row .btn-sm,.action-row .btn-ghost,.action-row .btn-primary{margin:2px 0}
+
+  /* Mine */
+  .mine-top{height:120px;background:linear-gradient(180deg,var(--primary) 0%,var(--primary-dark) 100%);border-radius:0 0 24px 24px;position:relative}
+  .user-card{margin-top:-50px;display:flex;align-items:center;position:relative;z-index:2}
+  .avatar{width:56px;height:56px;border-radius:50%;background:var(--primary-light);display:flex;align-items:center;justify-content:center;font-size:22px;color:var(--primary);font-weight:600;margin-right:12px}
+  .user-name{font-size:18px;font-weight:700;margin-right:10px}
+  .status-badge{font-size:11px;padding:2px 8px;border-radius:6px}
+  .status-unsettled{background:#f5f5f5;color:#999}
+  .status-settled{background:var(--primary-light);color:var(--primary)}
+  .status-auditing{background:#fff7e6;color:#fa8c16}
+  .user-phone{font-size:13px;color:var(--text-light);margin-top:4px}
+  .volume-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .volume-more{font-size:12px;color:var(--primary);cursor:pointer}
+  .volume-body{display:flex;justify-content:space-around}
+  .volume-item{display:flex;flex-direction:column;align-items:center}
+  .volume-item .num{font-size:18px;font-weight:700;color:var(--text)}
+  .volume-item .label{font-size:12px;color:var(--text-light);margin-top:4px}
+  .flow-steps{display:flex;align-items:center;justify-content:space-between;padding:8px 0}
+  .step{display:flex;flex-direction:column;align-items:center;font-size:10px;color:var(--text-light)}
+  .step-dot{width:10px;height:10px;border-radius:50%;background:#e5e5e5;margin-bottom:6px}
+  .step-dot.active{background:var(--primary)}
+  .step-line{flex:1;height:1px;background:#e5e5e5;margin:0 4px;margin-bottom:14px}
+
+  /* Tools Grid */
+  .tools-card{margin-top:12px}
+  .tools-title{font-size:15px;font-weight:600;color:var(--text);margin-bottom:16px}
+  .tools-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+  .tool-item{display:flex;flex-direction:column;align-items:center;cursor:pointer}
+  .tool-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin-bottom:8px}
+  .tool-label{font-size:12px;color:var(--text);text-align:center}
+  .icon-cert{width:22px;height:26px;border:2px solid var(--text);border-radius:3px;position:relative}
+  .icon-cert::before{content:'';position:absolute;top:6px;left:4px;right:4px;height:2px;background:var(--text)}
+  .icon-cert::after{content:'';position:absolute;top:11px;left:4px;width:8px;height:2px;background:var(--text)}
+  .icon-time{width:24px;height:24px;border:2px solid var(--text);border-radius:50%;position:relative}
+  .icon-time::before{content:'';position:absolute;top:3px;left:50%;transform:translateX(-50%);width:2px;height:7px;background:var(--text)}
+  .icon-time::after{content:'';position:absolute;top:50%;left:3px;width:6px;height:2px;background:var(--text)}
+  .icon-sms{width:24px;height:20px;border:2px solid var(--text);border-radius:6px;position:relative}
+  .icon-sms::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:4px;background:var(--text);border-radius:50%;box-shadow:7px 0 0 var(--text),-7px 0 0 var(--text)}
+  .icon-setting{width:24px;height:24px;border:2px solid var(--text);border-radius:50%;position:relative}
+  .icon-setting::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:8px;height:8px;border:2px solid var(--text);border-radius:50%;background:#fff}
+  .version{text-align:center;font-size:12px;color:var(--text-light);padding:16px 0}
+
+  /* Modal */
+  .mask{position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2000}
+  .modal{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:80%;max-width:320px;background:#fff;border-radius:20px;z-index:2001;padding:24px}
+  .modal-title{text-align:center;font-size:18px;font-weight:600;margin-bottom:16px}
+  .modal-body{font-size:14px;color:var(--text-secondary);line-height:1.6;margin-bottom:20px}
+  .modal-foot{display:flex;gap:12px}
+  .modal-foot .btn-plain,.modal-foot .btn-primary{flex:1}
+  .toast{position:fixed;top:40%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.75);color:#fff;padding:12px 20px;border-radius:8px;font-size:14px;z-index:2500}
+
+  /* SMS Modal */
+  .sms-modal{max-width:340px}
+  .sms-info{display:flex;align-items:center;margin-bottom:16px;font-size:14px}
+  .sms-label{color:var(--text-light)}
+  .sms-templates{display:flex;flex-direction:column;gap:10px}
+  .sms-template{padding:12px;border:1px solid var(--border);border-radius:10px;cursor:pointer}
+  .sms-template.active{border-color:var(--primary);background:var(--primary-light)}
+  .tpl-title{display:block;font-size:14px;font-weight:500;color:var(--text);margin-bottom:4px}
+  .tpl-content{display:block;font-size:12px;color:var(--text-secondary);line-height:1.5}
+
+  /* Upload Box */
+  .upload-box{width:100px;height:100px;border:1px dashed #d9d9d9;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-light);font-size:12px;cursor:pointer;overflow:hidden}
+  .upload-plus{font-size:28px;line-height:1;margin-bottom:4px}
+
+  /* ============ 铆钉脉冲动画 ============ */
+  @keyframes rivetPulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,0.6)}50%{box-shadow:0 0 0 8px rgba(16,185,129,0)}}
+  .pulse-target{animation:rivetPulse 1.2s ease-out 2;outline:2px solid #10B981;outline-offset:2px}
+
+  /* ============ 右：PRD 面板 ============ */
+  .prd-panel{background:#fff;border-left:1px solid var(--c-border);height:100vh;display:flex;flex-direction:column;overflow:hidden}
+  .prd-header{padding:14px 16px;border-bottom:1px solid var(--c-border);display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0}
+  .prd-header h2{font-size:15px;font-weight:800}
+  .prd-header .badge{font-size:10px;padding:2px 8px;background:var(--c-blue-tint);color:var(--c-blue);border-radius:9999px;font-weight:700}
+  .prd-tools{display:flex;gap:6px}
+  .tool-btn{padding:5px 10px;font-size:11px;border:1px solid var(--c-border);border-radius:6px;background:#fff;cursor:pointer;color:var(--c-text-2)}
+  .tool-btn:hover{border-color:var(--c-blue);color:var(--c-blue)}
+  .tool-btn.active-edit{background:var(--c-blue);color:#fff;border-color:var(--c-blue)}
+  .prd-body{flex:1;overflow-y:auto;padding:14px 16px}
+
+  /* ============ 在线编辑模式 ============ */
+  .editing .meta-block p[contenteditable="true"],
+  .editing .meta-block ul[contenteditable="true"],
+  .editing .meta-block li[contenteditable="true"],
+  .editing .card-desc[contenteditable="true"],
+  .editing .card-ac[contenteditable="true"],
+  .editing [contenteditable="true"]{
+    outline:2px dashed var(--c-blue);outline-offset:2px;border-radius:4px;min-height:1.5em;background:#fff}
+  .editing [contenteditable="true"]:focus{outline:2px solid var(--c-blue);background:#F0FDF4}
+  .edit-hint{font-size:10px;color:var(--c-blue);background:var(--c-blue-tint);padding:2px 8px;border-radius:4px;margin-left:4px;font-weight:600}
+  .save-toast{position:fixed;top:20px;right:20px;padding:10px 20px;background:var(--c-blue);color:#fff;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transform:translateY(-10px);transition:all .3s ease;pointer-events:none}
+  .save-toast.show{opacity:1;transform:translateY(0)}
+
+  /* Meta 章节通用样式 */
+  .meta-section{margin-bottom:12px}
+  .meta-header{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;background:linear-gradient(135deg,#1F2937,#059669);color:#fff;cursor:pointer;user-select:none}
+  .meta-header .toggle{font-size:12px;color:rgba(255,255,255,0.85);transition:transform .15s;width:14px}
+  .meta-header.collapsed .toggle{transform:rotate(-90deg)}
+  .meta-header h3{font-size:14px;font-weight:800;flex:1}
+  .meta-header .count{font-size:11px;color:rgba(255,255,255,0.85);font-weight:600;background:rgba(255,255,255,0.15);padding:2px 8px;border-radius:9999px}
+  .meta-content{padding:12px 4px 8px}
+  .meta-content.collapsed{display:none}
+  .meta-block{margin-bottom:12px}
+  .meta-block h5{font-size:11px;font-weight:800;color:var(--c-text-2);margin-bottom:6px}
+  .meta-block p{font-size:12.5px;line-height:1.65;background:#FAFAF8;padding:8px 10px;border-radius:6px}
+  .pain-list{font-size:12px;line-height:1.7;padding-left:18px;color:var(--c-text-2)}
+
+  /* 用户故事 */
+  .story-card{display:flex;gap:10px;background:linear-gradient(135deg,#FAFBFF,#F0FDF4);border:1px solid #D1FAE5;border-radius:10px;padding:10px 12px;margin-bottom:8px}
+  .story-idx{flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--c-blue);color:#fff;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .story-line{display:flex;gap:6px;font-size:12px;line-height:1.55}
+  .sl-key{flex-shrink:0;font-weight:800;color:var(--c-blue);min-width:50px;font-size:10.5px;font-style:italic}
+
+  /* 场景卡 */
+  .scenario-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .scenario-card{display:flex;gap:8px;background:#fff;border:1px solid var(--c-border);border-radius:8px;padding:8px 10px}
+  .scn-idx{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--c-blue-tint);color:var(--c-blue);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  .scn-name{font-size:12px;font-weight:700;margin-bottom:2px}
+  .scn-desc{font-size:11px;color:var(--c-text-2)}
+
+  /* 指标表 */
+  .aux-table{width:100%;border-collapse:collapse;font-size:11.5px;background:#fff;border-radius:6px;overflow:hidden;border:1px solid var(--c-border)}
+  .aux-table th{text-align:left;font-weight:700;padding:6px 8px;background:var(--c-bg);font-size:10px}
+  .aux-table td{padding:6px 8px;border-bottom:1px solid var(--c-border)}
+  .aux-table strong{color:var(--c-blue)}
+
+  /* 用户价值列表 */
+  .value-list{font-size:12px;line-height:1.7;list-style:none;padding-left:0}
+  .value-list li{padding:5px 10px;background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border-left:3px solid var(--c-orange);border-radius:6px;margin-bottom:4px;color:#7C2D12}
+
+  /* 不做的事 */
+  .not-doing-list{font-size:11.5px;list-style:none;padding-left:0}
+  .not-doing-list li{padding:5px 10px;background:rgba(220,38,38,0.06);border-left:3px solid var(--c-danger);border-radius:6px;margin-bottom:4px;color:#7F1D1D}
+  .future-list{font-size:11.5px;list-style:none;padding-left:0}
+  .future-list li{padding:5px 10px;background:rgba(16,185,129,0.06);border-left:3px solid var(--c-blue);border-radius:6px;margin-bottom:4px;color:#166534}
+
+  /* §5 功能分隔栏 */
+  .features-divider{display:flex;justify-content:space-between;padding:10px 14px;border-radius:10px;background:#F3F4F6;border:1px dashed var(--c-border);margin:8px 0}
+  .features-divider h3{font-size:13px;font-weight:800}
+
+  /* 功能卡片 */
+  .prd-page-group{margin-bottom:10px}
+  .prd-page-header{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#F4F4F5;border-radius:8px;cursor:pointer;user-select:none}
+  .prd-page-header h4{font-size:13px;font-weight:700;flex:1}
+  .prd-page-header .toggle-icon{transition:transform .15s}
+  .prd-page-header.collapsed .toggle-icon{transform:rotate(-90deg)}
+  .prd-page-body{padding:8px 0;display:none}
+  .prd-page-body.expanded{display:block}
+  .prd-card{background:#fff;border:1px solid var(--c-border);border-left:3px solid var(--c-text-3);border-radius:8px;padding:10px 12px;margin-bottom:8px;cursor:pointer;transition:border-color .15s}
+  .prd-card:hover{border-color:var(--c-blue)}
+  .prd-card.p0{border-left-color:#DC2626}
+  .prd-card.p1{border-left-color:#F59E0B}
+  .prd-card.active{border-color:#10B981;box-shadow:0 0 0 2px rgba(16,185,129,0.15)}
+  .card-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .card-title h5{font-size:13px;font-weight:700}
+  .priority-tag{font-size:9px;padding:1px 6px;border-radius:3px;font-weight:800;color:#fff}
+  .priority-tag.p0{background:#DC2626}
+  .priority-tag.p1{background:#F59E0B}
+  .priority-tag.p2{background:var(--c-text-3)}
+  .card-desc{font-size:12px;color:var(--c-text-2);line-height:1.5}
+  .card-ac{font-size:11px;color:var(--c-text-3);margin-top:6px;padding:6px 8px;background:#F9FAFB;border-radius:4px}
+
+  /* 水印 */
+  .xm-watermark{position:fixed;right:14px;bottom:14px;padding:5px 12px;font-size:11px;color:rgba(60,60,67,0.55);background:rgba(255,255,255,0.78);backdrop-filter:blur(8px);border-radius:9999px;pointer-events:none;z-index:9999}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ============ 左：Demo 面板（phone shell + 完整原型） ============ -->
+  <main class="demo-panel">
+    <div class="demo-title">康元方舟陪诊师端 · 移动端 Demo</div>
+    <div class="phone">
+      <div class="phone-screen">
+        <div class="mobile-frame">
+          <!-- ========== Login Page ========== -->
+          <div id="page-login" class="screen">
+            <div class="login-page">
+              <div class="logo-section">
+                <div class="logo-wrap">
+                  <div class="logo-icon">
+                    <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" opacity="0.3"/><path d="M3 12h3l2.5-5 3 7 2.5-4 2 5h4" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <div class="logo-pulse"></div>
+                  </div>
+                </div>
+                <div class="brand-name">康元方舟</div>
+                <div class="brand-slogan">专业陪诊服务平台</div>
+              </div>
+              <div class="auth-section">
+                <div class="btn-wechat" onclick="wechatLogin()">
+                  <div class="wechat-icon">微信</div>
+                  <span>微信一键授权登录</span>
+                </div>
+                <div class="btn-manual" onclick="openPhoneModal()">手机号登录</div>
+              </div>
+              <div class="agree-section">
+                <input type="checkbox" id="login-agree">
+                <span class="agree-text">登录即表示同意</span>
+                <span class="agree-link" onclick="showPrivacy()">《用户协议》</span>
+                <span class="agree-text">与</span>
+                <span class="agree-link" onclick="showPrivacy()">《隐私政策》</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ========== Phone Login Modal ========== -->
+          <div id="phone-modal-mask" class="mask hidden" onclick="closePhoneModal()"></div>
+          <div id="phone-modal" class="phone-modal hidden">
+            <div class="modal-head">
+              <span class="modal-tit">手机号登录</span>
+              <span class="modal-close" onclick="closePhoneModal()">x</span>
+            </div>
+            <div class="modal-body2">
+              <input type="number" class="phone-input" id="login-phone" placeholder="请输入手机号" maxlength="11">
+              <div class="code-row">
+                <input type="number" class="code-input" id="login-code" placeholder="验证码" maxlength="6">
+                <div class="btn-code" id="btn-get-code" onclick="getVerifyCode()">获取验证码</div>
+              </div>
+            </div>
+            <div class="modal-foot2">
+              <div class="btn-primary" onclick="submitPhoneLogin()">确认登录</div>
+            </div>
+          </div>
+
+          <!-- ========== 主内容区 (登录后显示) ========== -->
+          <div class="screen" id="screen" style="display:none;">
+
+            <!-- ========== Service Page ========== -->
+            <div id="page-service">
+              <div class="banner" id="banner" data-section-id="F1">
+                <div class="banner-track" id="banner-track">
+                  <div class="banner-item banner-bg1">
+                    <div class="banner-title">专业陪诊服务</div>
+                    <div class="banner-desc">让就医更轻松，让陪伴更温暖</div>
+                  </div>
+                  <div class="banner-item banner-bg2">
+                    <div class="banner-title">健康守护每一天</div>
+                    <div class="banner-desc">专业陪诊师全程陪同就医</div>
+                  </div>
+                  <div class="banner-item banner-bg3">
+                    <div class="banner-title">新手入驻福利</div>
+                    <div class="banner-desc">完成入驻即可开启接单权限</div>
+                  </div>
+                </div>
+                <div class="banner-dots">
+                  <div class="banner-dot active" data-idx="0"></div>
+                  <div class="banner-dot" data-idx="1"></div>
+                  <div class="banner-dot" data-idx="2"></div>
+                </div>
+              </div>
+              <div class="card tab-wrap" data-section-id="F1">
+                <div class="tab-item active" data-idx="0" onclick="switchTab(this)">待服务</div>
+                <div class="tab-item" data-idx="1" onclick="switchTab(this)">服务中</div>
+                <div class="tab-item" data-idx="2" onclick="switchTab(this)">服务完成</div>
+                <div class="tab-item" data-idx="3" onclick="switchTab(this)">全部</div>
+              </div>
+              <div id="order-list"></div>
+              <div style="height:20px"></div>
+            </div>
+
+            <!-- ========== Mine Page ========== -->
+            <div id="page-mine" class="hidden">
+              <div class="mine-top"></div>
+              <div class="card user-card">
+                <div class="avatar">王</div>
+                <div style="flex:1">
+                  <div style="display:flex;align-items:center;margin-bottom:4px">
+                    <span class="user-name">王陪护</span>
+                    <span class="status-badge status-unsettled" id="mine-status">未入驻</span>
+                  </div>
+                  <div class="user-phone">138****8888</div>
+                </div>
+              </div>
+              <div class="card" data-section-id="F8">
+                <div class="volume-head"><div class="section-title" style="margin-bottom:0">服务单量</div><span class="volume-more" onclick="showToast('查看详情')">查看详情 ></span></div>
+                <div class="volume-body">
+                  <div class="volume-item"><span class="num">12</span><span class="label">本月接单</span></div>
+                  <div class="volume-item"><span class="num">86</span><span class="label">累计服务</span></div>
+                  <div class="volume-item"><span class="num">3</span><span class="label">进行中</span></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="section-title">入驻流程</div>
+                <div class="flow-steps">
+                  <div class="step"><div class="step-dot active"></div><span>入驻</span></div>
+                  <div class="step-line"></div>
+                  <div class="step"><div class="step-dot active"></div><span>填写信息</span></div>
+                  <div class="step-line"></div>
+                  <div class="step"><div class="step-dot" id="step-submit"></div><span>提交申请</span></div>
+                  <div class="step-line"></div>
+                  <div class="step"><div class="step-dot" id="step-audit"></div><span>审核通过</span></div>
+                  <div class="step-line"></div>
+                  <div class="step"><div class="step-dot" id="step-sign"></div><span>在线签署</span></div>
+                  <div class="step-line"></div>
+                  <div class="step"><div class="step-dot" id="step-done"></div><span>入驻通过</span></div>
+                </div>
+              </div>
+              <!-- 我的工具 -->
+              <div class="card tools-card" data-section-id="F9">
+                <div class="tools-title">我的工具</div>
+                <div class="tools-grid">
+                  <div class="tool-item" onclick="showPage('settlein')">
+                    <div class="tool-icon"><div class="icon-cert"></div></div>
+                    <text class="tool-label">入驻申请</text>
+                  </div>
+                  <div class="tool-item" onclick="showToast('服务时间设置')">
+                    <div class="tool-icon"><div class="icon-time"></div></div>
+                    <text class="tool-label">服务时间</text>
+                  </div>
+                  <div class="tool-item" onclick="showToast('短信列表')">
+                    <div class="tool-icon"><div class="icon-sms"></div></div>
+                    <text class="tool-label">短信列表</text>
+                  </div>
+                  <div class="tool-item" onclick="showPage('settings')">
+                    <div class="tool-icon"><div class="icon-setting"></div></div>
+                    <text class="tool-label">我的设置</text>
+                  </div>
+                </div>
+              </div>
+              <div class="version">v1.0.0 康元方舟陪诊平台</div>
+            </div>
+
+            <!-- ========== Settings Page ========== -->
+            <div id="page-settings" class="hidden">
+              <div style="height:44px;display:flex;align-items:center;justify-content:center;background:#fff;font-size:17px;font-weight:600;position:relative">
+                <span style="position:absolute;left:12px;font-size:22px;color:#999;cursor:pointer;padding:6px 12px" onclick="showPage('mine')">&#8249;</span>
+                我的设置
+              </div>
+              <div class="card" style="padding:6px 16px">
+                <div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #eee" onclick="showPrivacy()">
+                  <div style="font-size:15px;font-weight:500;flex:1">隐私协议</div>
+                  <span style="font-size:20px;color:#ccc">></span>
+                </div>
+                <div style="display:flex;align-items:center;padding:10px 0;border-bottom:1px solid #eee" onclick="showToast('签署电子合同')">
+                  <div style="font-size:15px;font-weight:500;flex:1">签署电子合同</div>
+                  <span style="font-size:20px;color:#ccc">></span>
+                </div>
+                <div style="display:flex;align-items:center;padding:10px 0" onclick="showToast('客服：400-123-4567')">
+                  <div style="font-size:15px;font-weight:500;flex:1">联系客服</div>
+                  <span style="font-size:20px;color:#ccc">></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ========== Settlein Page ========== -->
+            <div id="page-settlein" class="hidden">
+              <div style="height:44px;display:flex;align-items:center;justify-content:center;background:#fff;font-size:17px;font-weight:600;position:relative" data-section-id="F9">
+                <span style="position:absolute;left:12px;font-size:22px;color:#999;cursor:pointer;padding:6px 12px" onclick="showPage('mine')">&#8249;</span>
+                入驻申请
+              </div>
+              <div style="font-size:15px;font-weight:600;color:#333;margin:16px 12px 8px">基本信息</div>
+              <div class="card" style="padding:6px 16px">
+                <div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #eee">
+                  <span style="width:90px;font-size:14px">姓名</span>
+                  <input style="flex:1;border:none;font-size:14px;outline:none" placeholder="请输入真实姓名" id="si-name">
+                </div>
+                <div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #eee">
+                  <span style="width:90px;font-size:14px">手机号</span>
+                  <input style="flex:1;border:none;font-size:14px;outline:none" value="138****8888" readonly>
+                  <span style="color:#10B981;font-size:14px;cursor:pointer" onclick="showToast('已获取微信授权')">获取</span>
+                </div>
+                <div style="padding:10px 0;border-bottom:1px solid #eee">
+                  <span style="font-size:14px;display:block;margin-bottom:10px">身份证照片</span>
+                  <div style="display:flex;gap:12px">
+                    <div class="upload-box" onclick="pickImage(this);recognizeIdCard()"><span class="upload-plus">+</span><span>身份证正面</span></div>
+                    <div class="upload-box" onclick="pickImage(this)"><span class="upload-plus">+</span><span>身份证反面</span></div>
+                  </div>
+                  <div id="idcard-tip" style="font-size:12px;color:#10B981;margin-top:8px;display:none">正在识别身份证信息...</div>
+                </div>
+                <div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #eee">
+                  <span style="width:90px;font-size:14px">性别</span>
+                  <label style="display:flex;align-items:center;font-size:14px;margin-right:20px"><input type="radio" name="gender" checked style="margin-right:6px;accent-color:#10B981">男</label>
+                  <label style="display:flex;align-items:center;font-size:14px"><input type="radio" name="gender" style="margin-right:6px;accent-color:#10B981">女</label>
+                </div>
+                <div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #eee">
+                  <span style="width:90px;font-size:14px">出生年月</span>
+                  <input type="month" style="flex:1;border:none;font-size:14px;outline:none" id="si-birth">
+                </div>
+                <div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #eee">
+                  <span style="width:90px;font-size:14px">身份证号</span>
+                  <input style="flex:1;border:none;font-size:14px;outline:none" placeholder="上传身份证后自动识别" id="si-id">
+                </div>
+                <div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #eee">
+                  <span style="width:90px;font-size:14px">城市</span>
+                  <input style="flex:1;border:none;font-size:14px;outline:none" placeholder="请输入可服务城市" id="si-city">
+                </div>
+                <div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #eee">
+                  <span style="width:90px;font-size:14px">可服务时间</span>
+                  <input style="flex:1;border:none;font-size:14px;outline:none" placeholder="如：周一至周五 08:00-18:00">
+                </div>
+                <div style="padding:10px 0;border-bottom:1px solid #eee">
+                  <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+                    <span style="font-size:14px">偏好医院</span>
+                    <span style="font-size:13px;color:#10B981;cursor:pointer" onclick="openHospitalPicker2()">+ 添加</span>
+                  </div>
+                  <div id="hospital-tags2" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+                  <div id="hospital-placeholder2" style="font-size:12px;color:#999">点击添加偏好服务的医院</div>
+                </div>
+              </div>
+
+              <!-- 学历证书 -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 12px 8px">
+                <span style="font-size:15px;font-weight:600">学历证书</span>
+                <span style="font-size:13px;color:#10B981;cursor:pointer" onclick="addCert2('edu')">+ 添加</span>
+              </div>
+              <div id="edu-certs2"></div>
+
+              <!-- 资质证书 -->
+              <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 12px 8px">
+                <span style="font-size:15px;font-weight:600">资质证书</span>
+                <span style="font-size:13px;color:#10B981;cursor:pointer" onclick="addCert2('qual')">+ 添加</span>
+              </div>
+              <div id="qual-certs2"></div>
+
+              <div style="display:flex;align-items:center;margin:16px 12px;font-size:12px;color:#666">
+                <input type="checkbox" id="si-agree" style="margin-right:6px;accent-color:#10B981">
+                <span>我已阅读并同意</span><span style="color:#10B981">《入驻协议》</span><span>与</span><span style="color:#10B981">《隐私条款》</span>
+              </div>
+              <div style="margin:24px 12px">
+                <div class="btn-primary" onclick="submitSettlein2()">提交申请</div>
+              </div>
+            </div>
+
+            <!-- ========== Hospital Picker Modal ========== -->
+            <div id="hospital-picker-mask2" class="mask hidden" onclick="closeHospitalPicker2()"></div>
+            <div id="hospital-picker2" class="hospital-picker hidden" style="position:fixed;left:0;right:0;bottom:0;max-height:70vh;background:#fff;border-radius:24px 24px 0 0;z-index:2001;transform:translateY(100%);transition:transform 0.3s">
+              <div style="display:flex;align-items:center;justify-content:space-between;padding:20px;border-bottom:1px solid #eee">
+                <span style="font-size:16px;font-weight:600">选择偏好医院</span>
+                <span style="font-size:14px;color:#10B981;cursor:pointer" onclick="closeHospitalPicker2()">完成</span>
+              </div>
+              <div id="hospital-list2" style="padding:12px;max-height:50vh;overflow-y:auto"></div>
+            </div>
+
+            <!-- ========== 发送短信页面 ========== -->
+            <div id="page-sendsms" class="hidden">
+              <div style="height:44px;display:flex;align-items:center;justify-content:center;background:#fff;font-size:17px;font-weight:600;position:relative" data-section-id="F4">
+                <span style="position:absolute;left:12px;font-size:22px;color:#999;cursor:pointer;padding:6px 12px" onclick="showPage('service')">&#8249;</span>
+                发送短信
+              </div>
+              <div style="font-size:14px;font-weight:600;color:#333;margin:16px 12px 8px">收件人信息</div>
+              <div class="card" style="display:flex;align-items:center">
+                <div style="width:40px;height:40px;border-radius:50%;background:#d1fae5;display:flex;align-items:center;justify-content:center;font-size:16px;color:#10B981;font-weight:600;margin-right:12px" id="sms-avatar">张</div>
+                <div>
+                  <div style="font-size:16px;font-weight:600;color:#333" id="sms-name">张阿姨</div>
+                  <div style="font-size:13px;color:#666" id="sms-phone">138****1234</div>
+                </div>
+              </div>
+              <div style="font-size:14px;font-weight:600;color:#333;margin:16px 12px 8px">选择短信模板</div>
+              <div class="card" style="padding:8px 16px">
+                <div style="display:flex;align-items:flex-start;padding:12px 0;border-bottom:1px solid #eee;cursor:pointer" onclick="selectSmsTpl(1)">
+                  <div id="sms-radio-1" style="width:20px;height:20px;border:2px solid #10B981;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0">
+                    <div style="width:10px;height:10px;border-radius:50%;background:#10B981"></div>
+                  </div>
+                  <div>
+                    <div style="font-size:14px;font-weight:500;color:#10B981">预约提醒</div>
+                    <div style="font-size:12px;color:#666;margin-top:4px">您好，您的陪诊服务已预约成功，请准时到达。</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;padding:12px 0;border-bottom:1px solid #eee;cursor:pointer" onclick="selectSmsTpl(2)">
+                  <div id="sms-radio-2" style="width:20px;height:20px;border:2px solid #ddd;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0"></div>
+                  <div>
+                    <div style="font-size:14px;font-weight:500;color:#333">服务进行中</div>
+                    <div style="font-size:12px;color:#666;margin-top:4px">您的陪诊服务正在进行中，如有问题请联系陪诊师。</div>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:flex-start;padding:12px 0;cursor:pointer" onclick="selectSmsTpl(3)">
+                  <div id="sms-radio-3" style="width:20px;height:20px;border:2px solid #ddd;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-right:12px;flex-shrink:0"></div>
+                  <div>
+                    <div style="font-size:14px;font-weight:500;color:#333">服务完成</div>
+                    <div style="font-size:12px;color:#666;margin-top:4px">您的陪诊服务已完成，感谢您的信任与支持。</div>
+                  </div>
+                </div>
+              </div>
+              <div style="font-size:14px;font-weight:600;color:#333;margin:16px 12px 8px">短信内容</div>
+              <div class="card" style="padding:12px">
+                <textarea id="sms-content" style="width:100%;height:100px;border:none;background:#f9f9f9;border-radius:10px;padding:12px;font-size:14px;resize:none;outline:none" placeholder="请输入短信内容"></textarea>
+                <div style="text-align:right;font-size:12px;color:#999;margin-top:8px"><span id="sms-count">0</span>/500</div>
+              </div>
+              <div style="margin:24px 12px">
+                <div class="btn-primary" onclick="sendSmsNow()">发送短信</div>
+              </div>
+            </div>
+
+          </div><!-- end #screen -->
+
+          <!-- ========== TabBar ========== -->
+          <div class="tabbar" id="tabbar" style="display:none;">
+            <div class="tabbar-item active" data-page="service" onclick="switchNav(this)"><div class="tabbar-icon"><div class="icon-service"></div></div><div class="tabbar-text">服务</div></div>
+            <div class="tabbar-item" data-page="mine" onclick="switchNav(this)"><div class="tabbar-icon"><div class="icon-mine"></div></div><div class="tabbar-text">我的</div></div>
+          </div>
+
+          <!-- ========== 全局 Modal / Toast ========== -->
+          <div id="modal-mask" class="mask hidden" onclick="closeModal()"></div>
+          <div id="modal" class="modal hidden"><div class="modal-title" id="modal-title">提示</div><div class="modal-body" id="modal-body"></div><div class="modal-foot" id="modal-foot"></div></div>
+          <div id="toast" class="toast hidden"></div>
+
+        </div><!-- end .mobile-frame -->
+      </div><!-- end .phone-screen -->
+    </div><!-- end .phone -->
+  </main>
+
+  <!-- ============ 右：PRD 面板（Rina 9 章节） ============ -->
+  <aside class="prd-panel" role="complementary">
+    <div class="prd-header">
+      <h2>PRD <span class="badge">康元方舟 v1</span></h2>
+      <div class="prd-tools">
+        <button class="tool-btn" id="editToggle" onclick="toggleEditMode()">✏️ 编辑</button>
+        <button class="tool-btn" onclick="exportPRD()">📋 导出 PRD</button>
+      </div>
+    </div>
+    <div class="prd-body">
+
+      <!-- ===== §1 需求背景 (expanded) ===== -->
+      <div class="meta-section">
+        <div class="meta-header" onclick="toggleGroup(this)">
+          <span class="toggle">&#9662;</span><h3>1. 需求背景</h3><span class="count">v1</span>
+        </div>
+        <div class="meta-content">
+          <div class="meta-block">
+            <h5>业务背景</h5>
+            <p>康元方舟是专业陪诊服务平台，需要为陪诊师提供移动端工具，用于接单、服务记录、工单回填和个人信息管理。</p>
+          </div>
+          <div class="meta-block">
+            <h5>现状与痛点</h5>
+            <ul class="pain-list">
+              <li>痛点 1：陪诊师缺乏统一的订单管理工具，沟通效率低</li>
+              <li>痛点 2：服务过程缺乏标准化记录，服务质量难以追踪</li>
+              <li>痛点 3：就诊凭证管理分散，无法形成完整服务档案</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== §2 目标用户 & 场景 (expanded) ===== -->
+      <div class="meta-section">
+        <div class="meta-header" onclick="toggleGroup(this)">
+          <span class="toggle">&#9662;</span><h3>2. 目标用户 &amp; 场景</h3><span class="count">4 场景</span>
+        </div>
+        <div class="meta-content">
+          <div class="meta-block">
+            <h5>主要用户</h5>
+            <p>已入驻康元方舟平台的陪诊师，年龄 25-50 岁，女性占比 70%，使用频率为日均 2-5 单</p>
+          </div>
+          <div class="meta-block">
+            <h5>次要用户</h5>
+            <p>平台运营人员，用于审核入驻、派单、服务质量监控</p>
+          </div>
+          <div class="meta-block">
+            <h5>核心场景</h5>
+            <div class="scenario-grid">
+              <div class="scenario-card"><span class="scn-idx">1</span><div><div class="scn-name">接单服务</div><div class="scn-desc">收到派单通知，查看订单详情，开始服务</div></div></div>
+              <div class="scenario-card"><span class="scn-idx">2</span><div><div class="scn-name">服务过程</div><div class="scn-desc">陪同就诊，记录服务过程，上传就诊凭证</div></div></div>
+              <div class="scenario-card"><span class="scn-idx">3</span><div><div class="scn-name">服务完成</div><div class="scn-desc">结束服务，查看服务统计数据</div></div></div>
+              <div class="scenario-card"><span class="scn-idx">4</span><div><div class="scn-name">个人管理</div><div class="scn-desc">维护个人信息，设置服务时间和费用</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== §3 用户故事 (expanded) ===== -->
+      <div class="meta-section">
+        <div class="meta-header" onclick="toggleGroup(this)">
+          <span class="toggle">&#9662;</span><h3>3. 用户故事</h3><span class="count">5 个</span>
+        </div>
+        <div class="meta-content">
+          <div class="story-card">
+            <span class="story-idx">#1</span>
+            <div>
+              <div class="story-line"><span class="sl-key">As a</span><span>陪诊师</span></div>
+              <div class="story-line"><span class="sl-key">I want</span><span>快速查看待服务订单详情</span></div>
+              <div class="story-line"><span class="sl-key">so that</span><span>提前做好服务准备</span></div>
+            </div>
+          </div>
+          <div class="story-card">
+            <span class="story-idx">#2</span>
+            <div>
+              <div class="story-line"><span class="sl-key">As a</span><span>陪诊师</span></div>
+              <div class="story-line"><span class="sl-key">I want</span><span>一键发送短信通知就诊人</span></div>
+              <div class="story-line"><span class="sl-key">so that</span><span>高效沟通预约信息</span></div>
+            </div>
+          </div>
+          <div class="story-card">
+            <span class="story-idx">#3</span>
+            <div>
+              <div class="story-line"><span class="sl-key">As a</span><span>陪诊师</span></div>
+              <div class="story-line"><span class="sl-key">I want</span><span>记录服务过程并上传凭证</span></div>
+              <div class="story-line"><span class="sl-key">so that</span><span>形成完整服务档案</span></div>
+            </div>
+          </div>
+          <div class="story-card">
+            <span class="story-idx">#4</span>
+            <div>
+              <div class="story-line"><span class="sl-key">As a</span><span>陪诊师</span></div>
+              <div class="story-line"><span class="sl-key">I want</span><span>查看服务统计数据</span></div>
+              <div class="story-line"><span class="sl-key">so that</span><span>了解个人服务表现</span></div>
+            </div>
+          </div>
+          <div class="story-card">
+            <span class="story-idx">#5</span>
+            <div>
+              <div class="story-line"><span class="sl-key">As a</span><span>陪诊师</span></div>
+              <div class="story-line"><span class="sl-key">I want</span><span>灵活设置服务时间和费用</span></div>
+              <div class="story-line"><span class="sl-key">so that</span><span>合理安排工作节奏</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== §4 预期收益 (collapsed) ===== -->
+      <div class="meta-section">
+        <div class="meta-header collapsed" onclick="toggleGroup(this)">
+          <span class="toggle">&#9662;</span><h3>4. 预期收益</h3><span class="count">3 指标</span>
+        </div>
+        <div class="meta-content collapsed">
+          <div class="meta-block">
+            <h5>4.1 指标收益</h5>
+            <table class="aux-table">
+              <thead><tr><th>指标</th><th>当前</th><th>目标</th><th>变化</th><th>周期</th></tr></thead>
+              <tbody>
+                <tr><td>* 订单完成率</td><td>85%</td><td><strong>92%</strong></td><td><strong style="color:#DC2626">+7pp</strong></td><td>4 周</td></tr>
+                <tr><td>服务记录完整度</td><td>60%</td><td><strong>90%</strong></td><td>+30pp</td><td>8 周</td></tr>
+                <tr><td>陪诊师活跃度</td><td>70%</td><td><strong>85%</strong></td><td>+15pp</td><td>4 周</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="meta-block">
+            <h5>4.2 用户价值收益</h5>
+            <ul class="value-list">
+              <li>【解决痛点】订单管理分散 -> 统一入口，一目了然</li>
+              <li>【解决痛点】服务记录难追踪 -> 标准化流程，完整档案</li>
+              <li>【体验提升】减少沟通成本 / 提升服务效率 / 增强职业获得感</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== §5 功能描述 ===== -->
+      <div class="meta-section">
+        <div class="features-divider"><h3>5. 功能描述</h3><span class="count">3 页 / 9 功能</span></div>
+      </div>
+
+      <!-- 服务页 (expanded) -->
+      <div class="prd-page-group">
+        <div class="prd-page-header" onclick="togglePageGroup(this)">
+          <span class="toggle-icon">&#9662;</span><h4>服务页</h4>
+        </div>
+        <div class="prd-page-body expanded">
+          <div class="prd-card p0" data-section-id="F1" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F1 · 待服务订单列表</h5><span class="priority-tag p0">P0</span></div>
+            <div class="card-desc">展示已分配但未开始的订单，支持查看详情、联系就诊人</div>
+            <div class="card-ac">AC1: 列表展示订单基本信息（就诊人、医院、科室、时间）</div>
+            <div class="card-ac">AC2: 点击订单卡片进入订单详情页</div>
+            <div class="card-ac">AC3: 空态显示引导文案「暂无待服务订单，请等待平台派单」</div>
+            <div class="card-ac">AC4: 支持按预约时间排序（最近优先）</div>
+          </div>
+          <div class="prd-card p0" data-section-id="F2" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F2 · 订单详情</h5><span class="priority-tag p0">P0</span></div>
+            <div class="card-desc">展示服务信息、就诊人信息，提供开始服务、联系就诊人入口</div>
+            <div class="card-ac">AC1: 展示服务信息（医院、科室、预约时间、服务类型）</div>
+            <div class="card-ac">AC2: 展示就诊人信息（姓名、性别、年龄、联系电话）</div>
+            <div class="card-ac">AC3: 提供「开始服务」按钮</div>
+            <div class="card-ac">AC4: 提供「发送短信」和「电话联系」入口</div>
+          </div>
+          <div class="prd-card p0" data-section-id="F3" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F3 · 开始服务</h5><span class="priority-tag p0">P0</span></div>
+            <div class="card-desc">陪诊师确认开始服务，订单状态变为「服务中」</div>
+            <div class="card-ac">AC1: 点击「开始服务」按钮，订单状态变为「服务中」</div>
+            <div class="card-ac">AC2: 开始服务无需定位校验，直接点击即可</div>
+            <div class="card-ac">AC3: 开始服务后记录起始时间</div>
+          </div>
+          <div class="prd-card p1" data-section-id="F4" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F4 · 发送短信通知</h5><span class="priority-tag p1">P1</span></div>
+            <div class="card-desc">陪诊师可通过预设模板发送短信通知就诊人</div>
+            <div class="card-ac">AC1: 提供 3 个预设模板（预约提醒、服务进行中、服务完成）</div>
+            <div class="card-ac">AC2: 可选择模板，模板内容可预览</div>
+            <div class="card-ac">AC3: 点击发送后显示发送状态</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 服务中 (collapsed) -->
+      <div class="prd-page-group">
+        <div class="prd-page-header collapsed" onclick="togglePageGroup(this)">
+          <span class="toggle-icon">&#9662;</span><h4>服务中</h4>
+        </div>
+        <div class="prd-page-body">
+          <div class="prd-card p0" data-section-id="F5" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F5 · 服务过程记录</h5><span class="priority-tag p0">P0</span></div>
+            <div class="card-desc">陪诊师记录服务过程，上传就诊凭证</div>
+            <div class="card-ac">AC1: 支持文字描述服务过程，限 500 字以内</div>
+            <div class="card-ac">AC2: 支持上传就诊凭证图片，最多 3 张</div>
+            <div class="card-ac">AC3: 实时显示服务计时</div>
+          </div>
+          <div class="prd-card p0" data-section-id="F6" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F6 · 服务完成</h5><span class="priority-tag p0">P0</span></div>
+            <div class="card-desc">陪诊师确认服务完成，订单状态变为「已完成」</div>
+            <div class="card-ac">AC1: 点击「服务完成」按钮，订单状态变为「已完成」</div>
+            <div class="card-ac">AC2: 无需就诊人确认，陪诊师点击即结束</div>
+            <div class="card-ac">AC3: 完成后跳转至服务完成列表</div>
+          </div>
+          <div class="prd-card p1" data-section-id="F7" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F7 · 取消订单</h5><span class="priority-tag p1">P1</span></div>
+            <div class="card-desc">服务中状态遇到异常情况时可取消订单</div>
+            <div class="card-ac">AC1: 服务中状态提供「取消订单」入口</div>
+            <div class="card-ac">AC2: 取消需填写原因（就诊人未到场、医院停诊、其他）</div>
+            <div class="card-ac">AC3: 取消后订单进入「已取消」状态</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 我的 (collapsed) -->
+      <div class="prd-page-group">
+        <div class="prd-page-header collapsed" onclick="togglePageGroup(this)">
+          <span class="toggle-icon">&#9662;</span><h4>我的</h4>
+        </div>
+        <div class="prd-page-body">
+          <div class="prd-card p1" data-section-id="F8" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F8 · 服务单量统计</h5><span class="priority-tag p1">P1</span></div>
+            <div class="card-desc">展示陪诊师服务统计数据</div>
+            <div class="card-ac">AC1: 展示本月接单数、累计服务数、进行中数</div>
+            <div class="card-ac">AC2: 点击「查看详情」进入数据看板</div>
+          </div>
+          <div class="prd-card p1" data-section-id="F9" onclick="rivetTo(this)">
+            <div class="card-title"><h5>F9 · 我的设置</h5><span class="priority-tag p1">P1</span></div>
+            <div class="card-desc">陪诊师个人信息和服务偏好设置</div>
+            <div class="card-ac">AC1: 支持基本信息维护（姓名、手机号、身份证）</div>
+            <div class="card-ac">AC2: 支持可服务时间设置</div>
+            <div class="card-ac">AC3: 支持服务费用设置（全局生效）</div>
+            <div class="card-ac">AC4: 提供隐私协议入口</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== §6 数据需求 (collapsed) ===== -->
+      <div class="meta-section">
+        <div class="meta-header collapsed" onclick="toggleGroup(this)">
+          <span class="toggle">&#9662;</span><h3>6. 数据需求</h3><span class="count">11 事件</span>
+        </div>
+        <div class="meta-content collapsed">
+          <div class="meta-block">
+            <h5>6.1 埋点（汇总）</h5>
+            <table class="aux-table">
+              <thead><tr><th>事件名</th><th>触发时机</th><th>参数</th><th>归属</th></tr></thead>
+              <tbody>
+                <tr><td>order_list_view</td><td>进入待服务列表</td><td>{tab: 'wait'}</td><td>F1</td></tr>
+                <tr><td>order_card_click</td><td>点击订单卡片</td><td>{order_id: 'xxx'}</td><td>F1</td></tr>
+                <tr><td>order_detail_view</td><td>进入订单详情</td><td>{order_id: 'xxx'}</td><td>F2</td></tr>
+                <tr><td>service_start_click</td><td>点击开始服务</td><td>{order_id: 'xxx'}</td><td>F3</td></tr>
+                <tr><td>service_start</td><td>服务开始</td><td>{order_id, start_time}</td><td>F3</td></tr>
+                <tr><td>sms_send</td><td>短信发送</td><td>{order_id, template_id}</td><td>F4</td></tr>
+                <tr><td>service_record_save</td><td>保存服务记录</td><td>{order_id, has_image}</td><td>F5</td></tr>
+                <tr><td>service_complete</td><td>服务完成</td><td>{order_id, end_time, duration}</td><td>F6</td></tr>
+                <tr><td>order_cancel</td><td>订单取消</td><td>{order_id, reason}</td><td>F7</td></tr>
+                <tr><td>stats_view</td><td>查看统计</td><td>{user_id}</td><td>F8</td></tr>
+                <tr><td>settings_save</td><td>保存设置</td><td>{field}</td><td>F9</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="meta-block">
+            <h5>6.2 看板</h5>
+            <p>核心监控指标：订单完成率、服务记录完整度、陪诊师活跃度<br>数据来源：客户端埋点（微信小程序）+ 后端业务库<br>统计口径：T+1 离线统计<br>看板路径：运营后台 -> 数据看板 -> 陪诊师数据</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== §7 非功能需求 (collapsed) ===== -->
+      <div class="meta-section">
+        <div class="meta-header collapsed" onclick="toggleGroup(this)">
+          <span class="toggle">&#9662;</span><h3>7. 非功能需求</h3>
+        </div>
+        <div class="meta-content collapsed">
+          <table class="aux-table">
+            <thead><tr><th>维度</th><th>要求</th></tr></thead>
+            <tbody>
+              <tr><td><strong>性能</strong></td><td>首屏 &lt; 2s / 交互响应 &lt; 100ms</td></tr>
+              <tr><td><strong>可访问性</strong></td><td>WCAG 2.1 AA / 触控 >= 44x44px / 对比度 >= 4.5:1</td></tr>
+              <tr><td><strong>兼容性</strong></td><td>iOS 14+ / Android 9+ / 微信基础库 >= 2.30.0</td></tr>
+              <tr><td><strong>隐私合规</strong></td><td>身份证信息加密存储，仅用于入驻审核</td></tr>
+              <tr><td><strong>稳定性</strong></td><td>接口失败率 &lt; 1% / 关键事务一致性 100%</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== §8 边界 & 不做的事 (collapsed) ===== -->
+      <div class="meta-section">
+        <div class="meta-header collapsed" onclick="toggleGroup(this)">
+          <span class="toggle">&#9662;</span><h3>8. 边界 &amp; 不做的事</h3>
+        </div>
+        <div class="meta-content collapsed">
+          <div class="meta-block">
+            <h5>不做的事</h5>
+            <ul class="not-doing-list">
+              <li>本期不支持陪诊师自主接单（仅平台派单）</li>
+              <li>本期不支持就诊人端功能</li>
+              <li>本期不支持在线支付（线下结算）</li>
+              <li>本期不支持定位签到校验</li>
+            </ul>
+          </div>
+          <div class="meta-block">
+            <h5>后续迭代考虑</h5>
+            <ul class="future-list">
+              <li>v1.1：支持陪诊师自主抢单</li>
+              <li>v1.2：定位签到校验功能</li>
+              <li>v2.0：就诊人端小程序</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== §9 遗留问题 (collapsed) ===== -->
+      <div class="meta-section">
+        <div class="meta-header collapsed" onclick="toggleGroup(this)">
+          <span class="toggle">&#9662;</span><h3>9. 遗留问题</h3><span class="count">3 待定</span>
+        </div>
+        <div class="meta-content collapsed">
+          <table class="aux-table">
+            <thead><tr><th>#</th><th>问题</th><th>状态</th><th>负责人</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>短信发送是否需要限制每日发送次数？</td><td>待定</td><td>产品</td></tr>
+              <tr><td>2</td><td>服务费用是否需要平台抽成？</td><td>待定</td><td>运营</td></tr>
+              <tr><td>3</td><td>取消订单是否影响陪诊师评分？</td><td>待定</td><td>产品</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div><!-- end .prd-body -->
+  </aside>
+</div><!-- end .app -->
+
+<!-- 水印 -->
+<div class="xm-watermark" aria-hidden="true">xiaomi created</div>
+
+<!-- 视图模式切换器 -->
+<div class="view-switcher" role="tablist" aria-label="视图模式">
+  <button id="vmBoth" class="active" role="tab" aria-selected="true" onclick="setViewMode('both')">Demo + PRD</button>
+  <button id="vmDemo" role="tab" aria-selected="false" onclick="setViewMode('demo')">只看 Demo</button>
+</div>
+
+<script>
+// ============================================================
+//  数据 & 状态
+// ============================================================
+const orders = [
+  { id:'WO20260710001', status:'wait', text:'待服务', tag:'tag-wait', patient:'张阿姨', phone:'138****1234', hospital:'协和医院', dept:'心内科', date:'2026-07-10 08:30', service:'全程陪诊', price:'¥280' },
+  { id:'WO20260710002', status:'running', text:'服务中', tag:'tag-running', patient:'李大爷', phone:'139****5678', hospital:'协和医院', dept:'骨科', date:'2026-07-10 09:00', service:'取药陪诊', price:'¥180' },
+  { id:'WO20260710003', status:'done', text:'服务完成', tag:'tag-done', patient:'王先生', phone:'137****9012', hospital:'同仁医院', dept:'眼科', date:'2026-07-09 14:00', service:'检查陪诊', price:'¥220' }
+];
+
+const hospitals = [
+  { id: 1, name: '协和医院', address: '北京市东城区帅府园1号' },
+  { id: 2, name: '同仁医院', address: '北京市东城区东交民巷1号' },
+  { id: 3, name: '北京医院', address: '北京市东城区东单大华路1号' },
+  { id: 4, name: '人民医院', address: '北京市西城区西直门南大街11号' },
+  { id: 5, name: '朝阳医院', address: '北京市朝阳区工人体育场南路8号' }
+];
+
+let currentTab = 0, currentNav = 'service';
+let bannerIdx = 0;
+let countdown = 0;
+
+let eduCerts2 = [{date:'',image:''}];
+let qualCerts2 = [{date:'',image:''}];
+let preferHospitals2 = [];
+
+let smsTplContents = {
+  1: '您好，您的陪诊服务已预约成功，就诊时间：2026-07-10 08:30，地点：协和医院心内科，请准时到达。如有疑问请联系陪诊师。',
+  2: '您的陪诊服务正在进行中，陪诊师将全程陪同您完成就诊。如有任何问题，请随时联系陪诊师。',
+  3: '您的陪诊服务已完成，感谢您的信任与支持。祝您早日康复，如有后续需求欢迎再次联系我们。'
+};
+let currentSmsTpl = 1;
+let smsReceiver = { name: '张阿姨', phone: '138****1234' };
+
+// ============================================================
+//  视图模式切换
+// ============================================================
+function setViewMode(mode){
+  var app = document.querySelector('.app');
+  var btnBoth = document.getElementById('vmBoth');
+  var btnDemo = document.getElementById('vmDemo');
+  if(mode==='demo'){
+    app.classList.add('demo-only');
+    btnDemo.classList.add('active'); btnDemo.setAttribute('aria-selected','true');
+    btnBoth.classList.remove('active'); btnBoth.setAttribute('aria-selected','false');
+  } else {
+    app.classList.remove('demo-only');
+    btnBoth.classList.add('active'); btnBoth.setAttribute('aria-selected','true');
+    btnDemo.classList.remove('active'); btnDemo.setAttribute('aria-selected','false');
+  }
+  try{localStorage.setItem('aligner-view-mode',mode)}catch(e){}
+}
+(function initViewMode(){
+  try{var saved=localStorage.getItem('aligner-view-mode');if(saved==='demo')setViewMode('demo')}catch(e){}
+})();
+
+// ============================================================
+//  章节折叠
+// ============================================================
+function toggleGroup(el){el.classList.toggle('collapsed');var c=el.nextElementSibling;if(c)c.classList.toggle('collapsed')}
+function togglePageGroup(el){el.classList.toggle('collapsed');var b=el.nextElementSibling;if(b)b.classList.toggle('expanded')}
+
+// ============================================================
+//  Login 相关
+// ============================================================
+function wechatLogin(){
+  if(!document.getElementById('login-agree').checked){showToast('请先同意协议');return}
+  showToast('授权登录中...');
+  setTimeout(function(){doLogin()},1500);
+}
+function openPhoneModal(){
+  if(!document.getElementById('login-agree').checked){showToast('请先同意协议');return}
+  document.getElementById('phone-modal-mask').classList.remove('hidden');
+  document.getElementById('phone-modal').classList.remove('hidden');
+}
+function closePhoneModal(){
+  document.getElementById('phone-modal-mask').classList.add('hidden');
+  document.getElementById('phone-modal').classList.add('hidden');
+}
+function getVerifyCode(){
+  var phone=document.getElementById('login-phone').value;
+  if(phone.length!==11){showToast('请输入正确手机号');return}
+  if(countdown>0)return;
+  showToast('验证码已发送');
+  countdown=60;
+  var btn=document.getElementById('btn-get-code');
+  var timer=setInterval(function(){
+    if(countdown<=0){clearInterval(timer);btn.innerText='获取验证码';btn.classList.remove('disabled')}
+    else{btn.innerText=countdown+'s';btn.classList.add('disabled');countdown--}
+  },1000);
+}
+function submitPhoneLogin(){
+  var phone=document.getElementById('login-phone').value;
+  var code=document.getElementById('login-code').value;
+  if(phone.length!==11||code.length<4){showToast('请输入正确信息');return}
+  closePhoneModal();
+  showToast('登录中...');
+  setTimeout(function(){doLogin()},1500);
+}
+function doLogin(){
+  document.getElementById('page-login').style.display='none';
+  document.getElementById('screen').style.display='block';
+  document.getElementById('tabbar').style.display='flex';
+  initBanner();
+  renderOrders();
+}
+
+// ============================================================
+//  Banner Swiper
+// ============================================================
+function initBanner(){
+  setInterval(function(){
+    bannerIdx=(bannerIdx+1)%3;
+    document.getElementById('banner-track').style.transform='translateX(-'+bannerIdx*100+'%)';
+    document.querySelectorAll('.banner-dot').forEach(function(d,i){d.classList.toggle('active',i===bannerIdx)});
+  },4000);
+}
+
+// ============================================================
+//  Orders
+// ============================================================
+function renderOrders(){
+  var list=document.getElementById('order-list');
+  var filtered=currentTab===3?orders:orders.filter(function(o){return o.status===['wait','running','done'][currentTab]});
+  list.innerHTML=filtered.map(function(o){
+    var actions='';
+    if(o.status==='wait'){
+      actions='<div class="btn-plain btn-sm" data-section-id="F2" onclick="showToast(\'订单详情\')">订单详情</div>'
+        +'<div class="btn-plain btn-sm" onclick="showToast(\'拨打电话\')">电话联系</div>'
+        +'<div class="btn-plain btn-sm" data-section-id="F4" onclick="goSendSms(\''+o.patient+'\',\''+o.phone+'\')">发送短信</div>'
+        +'<div class="btn-primary btn-sm" data-section-id="F3" onclick="showToast(\'开始服务\')">开始服务</div>';
+    } else if(o.status==='running'){
+      actions='<div class="btn-plain btn-sm" onclick="showToast(\'拨打电话\')">电话联系</div>'
+        +'<div class="btn-ghost btn-sm" data-section-id="F4" onclick="goSendSms(\''+o.patient+'\',\''+o.phone+'\')">发送短信</div>'
+        +'<div class="btn-plain btn-sm" onclick="showToast(\'服务回填\')">服务回填</div>'
+        +'<div class="btn-primary btn-sm" data-section-id="F6" onclick="showToast(\'结束服务\')">结束服务</div>';
+    } else if(o.status==='done'){
+      actions='<div class="btn-plain btn-sm" data-section-id="F2" onclick="showToast(\'查看详情\')">查看详情</div>'
+        +'<div class="btn-plain btn-sm" onclick="showToast(\'拨打电话\')">电话联系</div>';
+    }
+    return '<div class="card order-card" data-section-id="F2">'
+      +'<div class="order-head"><span class="order-id">'+o.id+'</span><span class="tag '+o.tag+'">'+o.text+'</span></div>'
+      +'<div class="patient-row"><span class="patient-name">'+o.patient+'</span><span class="patient-phone">'+o.phone+'</span><span class="patient-price">'+o.price+'</span></div>'
+      +'<div class="info-row"><span class="info-label">就诊医院</span><span class="info-value">'+o.hospital+' · '+o.dept+'</span></div>'
+      +'<div class="info-row"><span class="info-label">预约时间</span><span class="info-value">'+o.date+'</span></div>'
+      +'<div class="info-row"><span class="info-label">服务类型</span><span class="info-value">'+o.service+'</span></div>'
+      +'<div class="divider"></div>'
+      +'<div class="action-row">'+actions+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+// ============================================================
+//  Tab / Nav / Page
+// ============================================================
+function switchTab(el){
+  document.querySelectorAll('.tab-wrap .tab-item').forEach(function(i){i.classList.remove('active')});
+  el.classList.add('active');
+  currentTab=parseInt(el.dataset.idx);
+  renderOrders();
+}
+function switchNav(el){
+  document.querySelectorAll('.tabbar-item').forEach(function(i){i.classList.remove('active')});
+  el.classList.add('active');
+  currentNav=el.dataset.page;
+  showPage(currentNav);
+}
+function showPage(page){
+  ['service','mine','settings','settlein','sendsms'].forEach(function(p){document.getElementById('page-'+p).classList.add('hidden')});
+  document.getElementById('page-'+page).classList.remove('hidden');
+  var scr=document.getElementById('screen');
+  if(scr)scr.scrollTop=0;
+}
+
+// ============================================================
+//  Toast / Modal
+// ============================================================
+function showToast(msg){
+  var t=document.getElementById('toast');t.innerText=msg;t.classList.remove('hidden');
+  setTimeout(function(){t.classList.add('hidden')},2000);
+}
+function showPrivacy(){
+  showModal('隐私协议','本协议说明我们如何收集、使用和保护您的个人信息。','<div class="btn-primary" onclick="closeModal()">我知道了</div>');
+}
+function showModal(title,body,foot){
+  document.getElementById('modal-title').innerText=title;
+  document.getElementById('modal-body').innerHTML=body;
+  document.getElementById('modal-foot').innerHTML=foot;
+  document.getElementById('modal-mask').classList.remove('hidden');
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal(){
+  document.getElementById('modal-mask').classList.add('hidden');
+  document.getElementById('modal').classList.add('hidden');
+}
+
+// ============================================================
+//  SMS Modal (old inline modal style)
+// ============================================================
+function openSmsModal(patient,phone){
+  showModal('发送短信',
+    '<div class="sms-info"><span class="sms-label">收件人：</span>'+patient+' '+phone+'</div>'
+    +'<div class="sms-templates">'
+    +'<div class="sms-template active" onclick="this.parentElement.querySelectorAll(\'.sms-template\').forEach(function(t){t.classList.remove(\'active\')});this.classList.add(\'active\')">'
+    +'<span class="tpl-title">预约提醒</span><span class="tpl-content">您好，您的陪诊服务已预约成功，请准时到达。</span></div>'
+    +'<div class="sms-template" onclick="this.parentElement.querySelectorAll(\'.sms-template\').forEach(function(t){t.classList.remove(\'active\')});this.classList.add(\'active\')">'
+    +'<span class="tpl-title">服务进行中</span><span class="tpl-content">您的陪诊服务正在进行中，如有问题请联系陪诊师。</span></div>'
+    +'<div class="sms-template" onclick="this.parentElement.querySelectorAll(\'.sms-template\').forEach(function(t){t.classList.remove(\'active\')});this.classList.add(\'active\')">'
+    +'<span class="tpl-title">服务完成</span><span class="tpl-content">您的陪诊服务已完成，感谢您的信任与支持。</span></div>'
+    +'</div>',
+    '<div class="btn-plain" onclick="closeModal()">取消</div><div class="btn-primary" onclick="closeModal();showToast(\'发送成功\')">发送</div>');
+}
+
+// ============================================================
+//  发送短信页面
+// ============================================================
+function goSendSms(name,phone){
+  smsReceiver={name:name,phone:phone};
+  document.getElementById('sms-avatar').innerText=name[0];
+  document.getElementById('sms-name').innerText=name;
+  document.getElementById('sms-phone').innerText=phone;
+  selectSmsTpl(1);
+  showPage('sendsms');
+}
+function selectSmsTpl(id){
+  currentSmsTpl=id;
+  [1,2,3].forEach(function(i){
+    var radio=document.getElementById('sms-radio-'+i);
+    if(i===id){
+      radio.style.borderColor='#10B981';
+      radio.innerHTML='<div style="width:10px;height:10px;border-radius:50%;background:#10B981"></div>';
+    } else {
+      radio.style.borderColor='#ddd';
+      radio.innerHTML='';
+    }
+  });
+  document.getElementById('sms-content').value=smsTplContents[id];
+  document.getElementById('sms-count').innerText=smsTplContents[id].length;
+}
+document.getElementById('sms-content').addEventListener('input',function(){
+  document.getElementById('sms-count').innerText=this.value.length;
+});
+function sendSmsNow(){
+  var content=document.getElementById('sms-content').value;
+  if(!content){showToast('请输入短信内容');return}
+  showToast('发送中...');
+  setTimeout(function(){showToast('短信发送成功');setTimeout(function(){showPage('service')},1000)},1500);
+}
+
+// ============================================================
+//  入驻申请相关
+// ============================================================
+function recognizeIdCard(){
+  var tip=document.getElementById('idcard-tip');
+  tip.style.display='block';
+  tip.innerText='正在识别身份证信息...';
+  setTimeout(function(){
+    tip.innerText='身份证信息已自动填充';
+    document.getElementById('si-name').value='张陪护';
+    document.getElementById('si-birth').value='1990-05';
+    document.getElementById('si-id').value='110101199005152345';
+    showToast('身份证信息已识别');
+  },1500);
+}
+
+function renderCerts2(type){
+  var certs=type==='edu'?eduCerts2:qualCerts2;
+  var el=document.getElementById(type+'-certs2');
+  el.innerHTML=certs.map(function(c,i){
+    return '<div class="card" style="padding:10px 16px;margin:8px 12px">'
+      +'<div style="display:flex;justify-content:space-between;border-bottom:1px solid #eee;padding-bottom:8px;margin-bottom:8px">'
+      +'<span style="font-size:14px;font-weight:500">证书 '+(i+1)+'</span>'
+      +(certs.length>1?'<span style="font-size:13px;color:#ff4d4f;cursor:pointer" onclick="removeCert2(\''+type+'\','+i+')">删除</span>':'')
+      +'</div>'
+      +'<div style="display:flex;align-items:center;margin-bottom:8px">'
+      +'<span style="width:80px;font-size:14px">获取时间</span>'
+      +'<input type="month" style="flex:1;border:none;font-size:14px;outline:none">'
+      +'</div>'
+      +'<div class="upload-box" style="margin:8px 0" onclick="pickImage(this)"><span class="upload-plus">+</span><span>上传证书图片</span></div>'
+      +'</div>';
+  }).join('');
+}
+function addCert2(type){
+  if(type==='edu')eduCerts2.push({date:'',image:''});
+  else qualCerts2.push({date:'',image:''});
+  renderCerts2(type);
+}
+function removeCert2(type,idx){
+  if(type==='edu')eduCerts2.splice(idx,1);
+  else qualCerts2.splice(idx,1);
+  renderCerts2(type);
+}
+
+function openHospitalPicker2(){
+  document.getElementById('hospital-picker-mask2').classList.remove('hidden');
+  document.getElementById('hospital-picker2').classList.remove('hidden');
+  document.getElementById('hospital-picker2').style.transform='translateY(0)';
+  renderHospitalList2();
+}
+function closeHospitalPicker2(){
+  document.getElementById('hospital-picker-mask2').classList.add('hidden');
+  document.getElementById('hospital-picker2').style.transform='translateY(100%)';
+}
+function renderHospitalList2(){
+  var el=document.getElementById('hospital-list2');
+  el.innerHTML=hospitals.map(function(h){
+    var sel=preferHospitals2.some(function(p){return p.id===h.id});
+    return '<div class="hospital-option '+(sel?'selected':'')+'" onclick="toggleHospital2('+h.id+')" style="padding:12px 16px;border-radius:12px;margin-bottom:8px;border:1px solid #eee;cursor:pointer'+(sel?';background:#d1fae5;border-color:#10B981':'')+'">'
+      +'<div style="font-size:14px;font-weight:500;margin-bottom:4px'+(sel?';color:#10B981':'')+'">'+h.name+'</div>'
+      +'<div style="font-size:12px;color:#999">'+h.address+'</div>'
+      +'</div>';
+  }).join('');
+}
+function toggleHospital2(id){
+  var h=hospitals.find(function(x){return x.id===id});
+  var idx=preferHospitals2.findIndex(function(p){return p.id===id});
+  if(idx>-1)preferHospitals2.splice(idx,1);
+  else preferHospitals2.push(h);
+  renderHospitalList2();
+  renderHospitalTags2();
+}
+function renderHospitalTags2(){
+  var tagsEl=document.getElementById('hospital-tags2');
+  var placeholderEl=document.getElementById('hospital-placeholder2');
+  if(preferHospitals2.length===0){tagsEl.innerHTML='';placeholderEl.style.display='block'}
+  else{
+    placeholderEl.style.display='none';
+    tagsEl.innerHTML=preferHospitals2.map(function(h){
+      return '<div style="display:flex;align-items:center;padding:4px 12px;background:#d1fae5;border-radius:8px;font-size:12px;color:#10B981">'
+        +'<span>'+h.name+'</span>'
+        +'<span style="margin-left:6px;font-size:14px;cursor:pointer;opacity:0.7" onclick="removeHospital2('+h.id+')">x</span>'
+        +'</div>';
+    }).join('');
+  }
+}
+function removeHospital2(id){
+  preferHospitals2=preferHospitals2.filter(function(h){return h.id!==id});
+  renderHospitalTags2();
+  renderHospitalList2();
+}
+function submitSettlein2(){
+  var name=document.getElementById('si-name').value;
+  if(!name){showToast('请完善必填信息');return}
+  if(!document.getElementById('si-agree').checked){showToast('请同意入驻协议与隐私条款');return}
+  showModal('提交成功','您的入驻申请已提交，工作人员将在 1-3 个工作日内完成审核。','<div class="btn-primary" onclick="closeModal();settleStatus(\'auditing\');showPage(\'mine\')">确定</div>');
+}
+function settleStatus(status){
+  var map={unsettled:'未入驻',auditing:'审核中',settled:'已入驻'};
+  document.getElementById('mine-status').innerText=map[status];
+  document.getElementById('mine-status').className='status-badge status-'+status;
+}
+
+// ============================================================
+//  图片上传占位
+// ============================================================
+function pickImage(el){
+  showToast('图片上传功能演示中');
+}
+
+// ============================================================
+//  初始化证书列表
+// ============================================================
+renderCerts2('edu');
+renderCerts2('qual');
+
+// ============================================================
+//  铆钉联动：hover PRD 卡片 -> Demo 闪动
+// ============================================================
+function rivetTo(card){
+  var id=card.getAttribute('data-section-id');
+  if(!id)return;
+  // 1. 清除之前的 active
+  document.querySelectorAll('.prd-card.active').forEach(function(c){c.classList.remove('active')});
+  card.classList.add('active');
+
+  // 2. 在 phone-screen 中找到匹配的 data-section-id 元素
+  var phoneScreen=document.querySelector('.phone-screen');
+  var targets=phoneScreen.querySelectorAll('[data-section-id="'+id+'"]');
+  if(targets.length===0)return;
+
+  // 3. 如果目标在 hidden 页面中，先切换到对应页面
+  var targetPage=null;
+  for(var i=0;i<targets.length;i++){
+    var page=targets[i].closest('#page-service,#page-mine,#page-settlein,#page-sendsms,#page-settings');
+    if(page&&!page.classList.contains('hidden')){
+      targetPage=page;
+      break;
+    }
+  }
+  // 如果没有可见的目标，尝试切换页面
+  if(!targetPage){
+    for(var i=0;i<targets.length;i++){
+      var page=targets[i].closest('#page-service,#page-mine,#page-settlein,#page-sendsms,#page-settings');
+      if(page){
+        // 确定对应的 nav page
+        var pageId=page.id.replace('page-','');
+        showPage(pageId);
+        // 切换 nav
+        if(pageId==='service'||pageId==='mine'){
+          document.querySelectorAll('.tabbar-item').forEach(function(n){n.classList.remove('active')});
+          var navItem=document.querySelector('.tabbar-item[data-page="'+pageId+'"]');
+          if(navItem)navItem.classList.add('active');
+        }
+        break;
+      }
+    }
+  }
+
+  // 4. 找到第一个可见目标并滚动
+  setTimeout(function(){
+    var visTargets=phoneScreen.querySelectorAll('[data-section-id="'+id+'"]');
+    for(var i=0;i<visTargets.length;i++){
+      var el=visTargets[i];
+      // 检查是否在可见区域内
+      var page=el.closest('#page-service,#page-mine,#page-settlein,#page-sendsms,#page-settings');
+      if(page&&!page.classList.contains('hidden')){
+        // 对于 order-card 类型，滚动到 phone-screen 的位置
+        var screenEl=document.getElementById('screen');
+        if(screenEl){
+          var rect=el.getBoundingClientRect();
+          var screenRect=screenEl.getBoundingClientRect();
+          screenEl.scrollTop+=rect.top-screenRect.top-screenRect.height/2+rect.height/2;
+        }
+        // 添加脉冲效果
+        el.classList.remove('pulse-target');
+        void el.offsetWidth;
+        el.classList.add('pulse-target');
+        setTimeout(function(){el.classList.remove('pulse-target')},2500);
+        break;
+      }
+    }
+  },100);
+}
+
+// hover PRD card -> 滚动 Demo
+document.querySelectorAll('.prd-card[data-section-id]').forEach(function(card){
+  card.addEventListener('mouseenter',function(){
+    rivetTo(card);
+  });
+});
+
+// click Demo 中的 [data-section-id] -> PRD 滚动到对应卡片
+document.querySelector('.phone-screen').addEventListener('click',function(e){
+  var el=e.target.closest('[data-section-id]');
+  if(!el)return;
+  var id=el.getAttribute('data-section-id');
+  var prdCard=document.querySelector('.prd-card[data-section-id="'+id+'"]');
+  if(!prdCard)return;
+  // 清除之前的 active
+  document.querySelectorAll('.prd-card.active').forEach(function(c){c.classList.remove('active')});
+  prdCard.classList.add('active');
+  prdCard.scrollIntoView({behavior:'smooth',block:'center'});
+});
+
+// ============================================================
+//  导出 PRD
+// ============================================================
+function exportPRD(){
+  var body=document.querySelector('.prd-body');
+  var sections=body.querySelectorAll('.meta-section, .prd-page-group');
+  var lines=[];
+  lines.push('# PRD · 康元方舟陪诊师端 v1\n');
+
+  // §1
+  lines.push('## 1. 需求背景');
+  lines.push('- **业务背景**：康元方舟是专业陪诊服务平台，需要为陪诊师提供移动端工具，用于接单、服务记录、工单回填和个人信息管理。');
+  lines.push('- **痛点 1**：陪诊师缺乏统一的订单管理工具，沟通效率低');
+  lines.push('- **痛点 2**：服务过程缺乏标准化记录，服务质量难以追踪');
+  lines.push('- **痛点 3**：就诊凭证管理分散，无法形成完整服务档案\n');
+
+  // §2
+  lines.push('## 2. 目标用户 & 场景');
+  lines.push('- **主要用户**：已入驻康元方舟平台的陪诊师，年龄 25-50 岁，女性占比 70%，使用频率为日均 2-5 单');
+  lines.push('- **次要用户**：平台运营人员');
+  lines.push('- **核心场景**：接单服务 / 服务过程 / 服务完成 / 个人管理\n');
+
+  // §3
+  lines.push('## 3. 用户故事');
+  lines.push('- #1 As a 陪诊师, I want 快速查看待服务订单详情, so that 提前做好服务准备');
+  lines.push('- #2 As a 陪诊师, I want 一键发送短信通知就诊人, so that 高效沟通预约信息');
+  lines.push('- #3 As a 陪诊师, I want 记录服务过程并上传凭证, so that 形成完整服务档案');
+  lines.push('- #4 As a 陪诊师, I want 查看服务统计数据, so that 了解个人服务表现');
+  lines.push('- #5 As a 陪诊师, I want 灵活设置服务时间和费用, so that 合理安排工作节奏\n');
+
+  // §4
+  lines.push('## 4. 预期收益');
+  lines.push('| 指标 | 当前 | 目标 | 变化 | 周期 |');
+  lines.push('|---|---|---|---|---|');
+  lines.push('| 订单完成率 | 85% | 92% | +7pp | 4 周 |');
+  lines.push('| 服务记录完整度 | 60% | 90% | +30pp | 8 周 |');
+  lines.push('| 陪诊师活跃度 | 70% | 85% | +15pp | 4 周 |\n');
+
+  // §5
+  lines.push('## 5. 功能描述');
+  lines.push('### F1 · 待服务订单列表 [P0]');
+  lines.push('展示已分配但未开始的订单，支持查看详情、联系就诊人\n');
+  lines.push('### F2 · 订单详情 [P0]');
+  lines.push('展示服务信息、就诊人信息，提供开始服务、联系就诊人入口\n');
+  lines.push('### F3 · 开始服务 [P0]');
+  lines.push('陪诊师确认开始服务，订单状态变为「服务中」\n');
+  lines.push('### F4 · 发送短信通知 [P1]');
+  lines.push('通过预设模板发送短信通知就诊人\n');
+  lines.push('### F5 · 服务过程记录 [P0]');
+  lines.push('陪诊师记录服务过程，上传就诊凭证\n');
+  lines.push('### F6 · 服务完成 [P0]');
+  lines.push('陪诊师确认服务完成\n');
+  lines.push('### F7 · 取消订单 [P1]');
+  lines.push('服务中状态遇到异常情况时可取消订单\n');
+  lines.push('### F8 · 服务单量统计 [P1]');
+  lines.push('展示陪诊师服务统计数据\n');
+  lines.push('### F9 · 我的设置 [P1]');
+  lines.push('陪诊师个人信息和服务偏好设置\n');
+
+  // §6
+  lines.push('## 6. 数据需求');
+  lines.push('11 个埋点事件：order_list_view / order_card_click / order_detail_view / service_start_click / service_start / sms_send / service_record_save / service_complete / order_cancel / stats_view / settings_save\n');
+
+  // §7
+  lines.push('## 7. 非功能需求');
+  lines.push('性能：首屏 < 2s / 交互 < 100ms');
+  lines.push('兼容性：iOS 14+ / Android 9+ / 微信基础库 >= 2.30.0');
+  lines.push('隐私：身份证信息加密存储\n');
+
+  // §8
+  lines.push('## 8. 边界 & 不做的事');
+  lines.push('- 本期不支持陪诊师自主接单（仅平台派单）');
+  lines.push('- 本期不支持就诊人端功能');
+  lines.push('- 本期不支持在线支付（线下结算）');
+  lines.push('- 本期不支持定位签到校验\n');
+
+  // §9
+  lines.push('## 9. 遗留问题');
+  lines.push('| # | 问题 | 状态 | 负责人 |');
+  lines.push('|---|---|---|---|');
+  lines.push('| 1 | 短信发送是否需要限制每日发送次数？ | 待定 | 产品 |');
+  lines.push('| 2 | 服务费用是否需要平台抽成？ | 待定 | 运营 |');
+  lines.push('| 3 | 取消订单是否影响陪诊师评分？ | 待定 | 产品 |\n');
+
+  lines.push('*PRD v1 · 生成时间：2026-07-11*');
+
+  var blob=new Blob([lines.join('\n')],{type:'text/markdown;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='PRD-康元方舟陪诊师端-v1.md';
+  a.click();
+}
+
+// ============================================================
+//  在线编辑功能
+// ============================================================
+var isEditMode = false;
+var autoSaveTimer = null;
+
+function toggleEditMode() {
+  isEditMode = !isEditMode;
+  var prdBody = document.querySelector('.prd-body');
+  var btn = document.getElementById('editToggle');
+  
+  if (isEditMode) {
+    prdBody.classList.add('editing');
+    btn.classList.add('active-edit');
+    btn.innerText = '✅ 完成';
+    // 给所有可编辑区域添加 contenteditable
+    enableEditing(prdBody);
+    // 加载已保存的修改
+    loadSavedEdits();
+  } else {
+    prdBody.classList.remove('editing');
+    btn.classList.remove('active-edit');
+    btn.innerText = '✏️ 编辑';
+    // 移除 contenteditable
+    disableEditing(prdBody);
+  }
+}
+
+function enableEditing(container) {
+  // 所有段落、列表项、卡片描述、卡片验收标准
+  var editableSelectors = [
+    '.meta-block p',
+    '.meta-block li',
+    '.card-desc',
+    '.card-ac',
+    '.story-line span:not(.sl-key)',
+    '.scn-desc',
+    '.scn-name'
+  ];
+  editableSelectors.forEach(function(sel) {
+    container.querySelectorAll(sel).forEach(function(el) {
+      el.setAttribute('contenteditable', 'true');
+      el.addEventListener('blur', autoSave);
+      el.addEventListener('input', markDirty);
+    });
+  });
+}
+
+function disableEditing(container) {
+  container.querySelectorAll('[contenteditable="true"]').forEach(function(el) {
+    el.removeAttribute('contenteditable');
+    el.removeEventListener('blur', autoSave);
+    el.removeEventListener('input', markDirty);
+  });
+}
+
+function markDirty(e) {
+  var el = e.target;
+  el.style.background = '#FEF3C7';
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(function() {
+    saveEdits();
+    el.style.background = '';
+    showSaveToast('已自动保存');
+  }, 1500);
+}
+
+function autoSave() {
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(function() {
+    saveEdits();
+    showSaveToast('已自动保存');
+  }, 500);
+}
+
+function saveEdits() {
+  try {
+    var edits = {};
+    document.querySelectorAll('.prd-body [contenteditable="true"]').forEach(function(el) {
+      var path = getEditPath(el);
+      if (path) edits[path] = el.innerHTML;
+    });
+    localStorage.setItem('aligner-prd-edits', JSON.stringify(edits));
+  } catch(e) {}
+}
+
+function loadSavedEdits() {
+  try {
+    var edits = JSON.parse(localStorage.getItem('aligner-prd-edits') || '{}');
+    document.querySelectorAll('.prd-body [contenteditable="true"]').forEach(function(el) {
+      var path = getEditPath(el);
+      if (path && edits[path]) {
+        el.innerHTML = edits[path];
+      }
+    });
+  } catch(e) {}
+}
+
+function getEditPath(el) {
+  var path = [];
+  var node = el;
+  var maxDepth = 6;
+  while (node && node !== document.querySelector('.prd-body') && maxDepth-- > 0) {
+    var idx = Array.prototype.indexOf.call(node.parentNode.children, node);
+    if (node.id) { path.unshift(node.tagName + '#' + node.id); break; }
+    else if (node.className && typeof node.className === 'string' && node.className.indexOf('meta-section') > -1) { path.unshift('section-' + idx); break; }
+    else if (node.className && typeof node.className === 'string' && node.className.indexOf('prd-page-group') > -1) { path.unshift('pagegroup-' + idx); break; }
+    else if (node.className && typeof node.className === 'string' && node.className.indexOf('prd-card') > -1) { var sid = node.getAttribute('data-section-id'); path.unshift('card-' + (sid || idx)); break; }
+    else if (node.className && typeof node.className === 'string' && node.className.indexOf('meta-block') > -1) { path.unshift('block-' + idx); break; }
+    else if (node.className && typeof node.className === 'string' && node.className.indexOf('story-card') > -1) { path.unshift('story-' + idx); break; }
+    else if (node.className && typeof node.className === 'string' && node.className.indexOf('scenario-card') > -1) { path.unshift('scn-' + idx); break; }
+    else path.unshift(idx);
+    node = node.parentNode;
+  }
+  return path.length > 0 ? path.join('/') : null;
+}
+
+function showSaveToast(msg) {
+  var toast = document.createElement('div');
+  toast.className = 'save-toast';
+  toast.innerText = msg;
+  document.body.appendChild(toast);
+  setTimeout(function() { toast.classList.add('show'); }, 10);
+  setTimeout(function() {
+    toast.classList.remove('show');
+    setTimeout(function() { toast.remove(); }, 300);
+  }, 1500);
+}
+
+// 页面加载时恢复已保存的编辑（不自动开启编辑模式）
+</script>
+</body>
+</html>
