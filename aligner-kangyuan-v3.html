@@ -460,6 +460,7 @@
   .cal-cell .cal-dot{width:8px;height:8px;border-radius:50%;transition:all .15s}
   .cal-cell .cal-dot.on{background:#10B981}
   .cal-cell .cal-dot.off{background:#ccc}
+  .eval-tag.selected{background:#d1fae5 !important;color:#10B981 !important;border-color:#10B981 !important}
   
     .demo-content .mobile-frame{width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;box-shadow:none!important;border-radius:0!important;margin:0!important;}
     .demo-content [id^="page-"]{position:relative;}
@@ -1217,6 +1218,7 @@
     </div>
   </div>
       </div>
+    </div>
     </div>
 
   <!-- ========== PRD Panel ========== -->
@@ -4294,7 +4296,7 @@ OCR识别准确率 ≥ 90%，入驻信息填写耗时 ≤ 10分钟。
 
     function switchTab(el) { document.querySelectorAll('.tab-wrap .tab-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); currentTab = parseInt(el.dataset.idx); renderOrders(); }
     function switchNav(el) { document.querySelectorAll('.tabbar-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); currentNav = el.dataset.page; showPage(currentNav); }
-    function showPage(page) { ['service','mine','settings','settlein','sendsms','servicerecord','servicesummary','servicetime','orderdetail'].forEach(p => document.getElementById('page-'+p).classList.add('hidden')); document.getElementById('page-'+page).classList.remove('hidden'); document.getElementById('screen').scrollTop = 0; if (page === 'servicetime' && !calYear) initCalendar(); }
+    function showPage(page) { ['service','mine','settings','settlein','sendsms','servicerecord','servicesummary','servicetime','orderdetail','signature','evaluation','signcontract'].forEach(p => document.getElementById('page-'+p).classList.add('hidden')); document.getElementById('page-'+page).classList.remove('hidden'); document.getElementById('screen').scrollTop = 0; if (page === 'servicetime' && !calYear) initCalendar(); }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 2000); }
     function showPrivacy() { showModal('隐私协议', '本协议说明我们如何收集、使用和保护您的个人信息。', `<div class="btn-primary" onclick="closeModal()">我知道了</div>`); }
     function showModal(title, body, foot) { document.getElementById('modal-title').innerText = title; document.getElementById('modal-body').innerHTML = body; document.getElementById('modal-foot').innerHTML = foot; document.getElementById('modal-mask').classList.remove('hidden'); document.getElementById('modal').classList.remove('hidden'); }
@@ -4428,8 +4430,12 @@ OCR识别准确率 ≥ 90%，入驻信息填写耗时 ≤ 10分钟。
       imgBox.innerHTML = '<div style="width:72px;height:72px;border:1.5px dashed #d1d5db;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer" onclick="addSrImage(this)"><span style="font-size:24px;color:#ccc">+</span><span style="font-size:10px;color:#999">上传</span></div>';
       // 重置签字
       var signArea = document.getElementById('sr-sign-area');
-      signArea.innerHTML = '<span style="font-size:13px;color:#bbb">点击此处签字</span>';
+      signArea.innerHTML = '<svg viewBox="0 0 24 24" style="width:32px;height:32px;fill:#bbb;margin-bottom:8px"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg><span style="font-size:13px;color:#bbb">点击进入签字</span>';
       signArea.style.background = '#fafafa';
+      signArea.style.borderColor = '#d1d5db';
+      document.getElementById('sr-sign-done').classList.add('hidden');
+      // 重置步骤
+      goSrStep1();
       showPage('servicerecord');
     }
 
@@ -4451,6 +4457,35 @@ OCR识别准确率 ≥ 90%，入驻信息填写耗时 ≤ 10分钟。
       if (addBtn && srImageCount < 5) addBtn.style.display = '';
     }
 
+    function goSrStep1() {
+      document.getElementById('sr-step1').classList.remove('hidden');
+      document.getElementById('sr-step1-btns').classList.remove('hidden');
+      document.getElementById('sr-step2').classList.add('hidden');
+      document.querySelector('#sr-step1-indicator span:first-child').style.background = '#10B981';
+      document.querySelector('#sr-step1-indicator span:first-child').style.color = '#fff';
+      document.querySelector('#sr-step1-indicator span:last-child').style.color = '#10B981';
+      document.getElementById('sr-step2-dot').style.background = '#e5e7eb';
+      document.getElementById('sr-step2-dot').style.color = '#999';
+      document.getElementById('sr-step2-label').style.color = '#999';
+    }
+
+    function goSrStep2() {
+      if (!document.getElementById('sr-expert').value) { showToast('请选择服务专家'); return; }
+      if (!document.getElementById('sr-disease').value.trim()) { showToast('请填写疾病名称'); return; }
+      if (!document.getElementById('sr-checkup').value.trim()) { showToast('请填写当日检查情况'); return; }
+      document.getElementById('sr-step1').classList.add('hidden');
+      document.getElementById('sr-step1-btns').classList.add('hidden');
+      document.getElementById('sr-step2').classList.remove('hidden');
+      document.querySelector('#sr-step1-indicator span:first-child').style.background = '#10B981';
+      document.getElementById('sr-step2-dot').style.background = '#10B981';
+      document.getElementById('sr-step2-dot').style.color = '#fff';
+      document.getElementById('sr-step2-label').style.color = '#10B981';
+    }
+
+    function goSignature() {
+      showPage('signature');
+    }
+
     function signPad(el) {
       if (srSigned) return;
       srSigned = true;
@@ -4458,19 +4493,85 @@ OCR识别准确率 ≥ 90%，入驻信息填写耗时 ≤ 10分钟。
       el.style.background = '#fff';
       el.style.borderColor = '#10B981';
       showToast('签字完成');
+      setTimeout(function() {
+        var signArea = document.getElementById('sr-sign-area');
+        signArea.innerHTML = '<svg viewBox="0 0 200 80" style="width:100%;height:100%"><path d="M20,50 Q40,20 60,40 T100,45 Q130,25 160,50" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+        signArea.style.background = '#fff';
+        signArea.style.borderColor = '#10B981';
+        document.getElementById('sr-sign-done').classList.remove('hidden');
+        showPage('servicerecord');
+        goSrStep2();
+      }, 800);
     }
 
-    function saveServiceRecord(isDraft) {
-      if (!isDraft) {
-        if (!document.getElementById('sr-expert').value.trim()) { showToast('请填写服务专家'); return; }
-        if (!document.getElementById('sr-disease').value.trim()) { showToast('请填写疾病名称'); return; }
-        if (!document.getElementById('sr-checkup').value.trim()) { showToast('请填写当日检查情况'); return; }
-        if (!srSigned) { showToast('请完成客户签字'); return; }
-        showToast('回填已提交');
-        setTimeout(function() { showPage('orderdetail'); }, 1000);
-      } else {
-        showToast('已保存草稿');
-      }
+    function saveServiceRecordDraft() {
+      showToast('已保存草稿');
+    }
+
+    function submitServiceRecord() {
+      if (!srSigned) { showToast('请完成客户签字'); return; }
+      showToast('回填已提交');
+      setTimeout(function() { showPage('evaluation'); }, 1000);
+    }
+
+    // ========== 签字页 ==========
+    function resetSign() {
+      srSigned = false;
+      var pad = document.getElementById('sign-pad');
+      pad.innerHTML = '<span style="font-size:14px;color:#bbb">点击此处签字</span>';
+      pad.style.background = '#fafafa';
+      pad.style.borderColor = '#d1d5db';
+    }
+
+    function confirmSign() {
+      if (!srSigned) { showToast('请先完成签字'); return; }
+      showToast('签字确认成功');
+    }
+
+    // ========== 用户评价 ==========
+    var currentRating = 0;
+    var ratingLabels = ['', '很不满意', '不满意', '一般', '满意', '非常满意'];
+
+    function setStar(v) {
+      currentRating = v;
+      document.querySelectorAll('.star').forEach(function(s) {
+        var sv = parseInt(s.getAttribute('data-v'));
+        s.style.color = sv <= v ? '#F59E0B' : '#ddd';
+      });
+      document.getElementById('rating-text').innerText = ratingLabels[v];
+    }
+
+    function submitEvaluation() {
+      if (currentRating === 0) { showToast('请选择评分'); return; }
+      showToast('评价已提交，感谢您的反馈');
+      setTimeout(function() { showPage('service'); }, 1500);
+    }
+
+    // ========== 电子合同签署 ==========
+    var contractSigned = false;
+
+    function signContract(el) {
+      if (contractSigned) return;
+      contractSigned = true;
+      el.innerHTML = '<svg viewBox="0 0 200 80" style="width:100%;height:100%"><path d="M20,50 Q40,20 60,40 T100,45 Q130,25 160,50" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+      el.style.background = '#fff';
+      el.style.borderColor = '#10B981';
+      showToast('签字完成');
+    }
+
+    function confirmContract() {
+      if (!contractSigned) { showToast('请先完成签字'); return; }
+      if (!document.getElementById('contract-agree').checked) { showToast('请同意入驻服务协议'); return; }
+      showToast('合同签署成功，欢迎加入康元方舟');
+      setTimeout(function() {
+        settleStatus('settled');
+        showPage('mine');
+      }, 1500);
+    }
+
+    // ========== 入驻表单-可服务时间周几多选 ==========
+    function toggleSettleWeekDay(el) {
+      el.classList.toggle('active');
     }
 
     // ========== 4. 结束服务前置校验 ==========
