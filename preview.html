@@ -268,6 +268,7 @@
   .cal-cell .cal-dot{width:8px;height:8px;border-radius:50%;transition:all .15s}
   .cal-cell .cal-dot.on{background:#10B981}
   .cal-cell .cal-dot.off{background:#ccc}
+    .eval-tag.selected{background:#d1fae5 !important;color:#10B981 !important;border-color:#10B981 !important}
   </style>
 </head>
 <body>
@@ -620,8 +621,21 @@
           <span class="page-nav-back" onclick="showPage('orderdetail')">&lsaquo;</span>
           服务回填
         </div>
-        <!-- 回填表单 -->
-        <div class="card" style="margin:8px 12px;padding:12px 14px">
+        <!-- 步骤指示器 -->
+        <div style="display:flex;align-items:center;justify-content:center;padding:16px 12px 8px;gap:8px">
+          <div id="sr-step1-indicator" style="display:flex;align-items:center;gap:4px">
+            <span style="width:24px;height:24px;border-radius:50%;background:#10B981;color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">1</span>
+            <span style="font-size:13px;color:#10B981;font-weight:600">服务信息</span>
+          </div>
+          <div style="width:40px;height:2px;background:#e5e7eb;border-radius:1px"></div>
+          <div id="sr-step2-indicator" style="display:flex;align-items:center;gap:4px">
+            <span id="sr-step2-dot" style="width:24px;height:24px;border-radius:50%;background:#e5e7eb;color:#999;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center">2</span>
+            <span id="sr-step2-label" style="font-size:13px;color:#999">客户签字</span>
+          </div>
+        </div>
+
+        <!-- 步骤1：服务信息 -->
+        <div id="sr-step1" class="card" style="margin:8px 12px;padding:12px 14px">
           <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:12px">服务信息回填</div>
           <!-- 服务状态 -->
           <div style="margin-bottom:12px">
@@ -632,19 +646,26 @@
               <option value="异常终止">异常终止</option>
             </select>
           </div>
-          <!-- 服务专家 -->
+          <!-- 服务专家 - 下拉选择 -->
           <div style="margin-bottom:12px">
-            <div style="font-size:13px;color:#999;margin-bottom:6px">服务专家</div>
-            <input type="text" id="sr-expert" placeholder="请输入服务专家姓名" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px">
+            <div style="font-size:13px;color:#999;margin-bottom:6px">服务专家 <span style="color:#ff4d4f">*</span></div>
+            <select id="sr-expert" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;background:#fff">
+              <option value="">请选择服务专家</option>
+              <option value="李医生">李医生 - 心内科</option>
+              <option value="王医生">王医生 - 神经外科</option>
+              <option value="张医生">张医生 - 骨科</option>
+              <option value="赵医生">赵医生 - 呼吸科</option>
+              <option value="刘医生">刘医生 - 消化科</option>
+            </select>
           </div>
           <!-- 疾病名称 -->
           <div style="margin-bottom:12px">
-            <div style="font-size:13px;color:#999;margin-bottom:6px">疾病名称</div>
+            <div style="font-size:13px;color:#999;margin-bottom:6px">疾病名称 <span style="color:#ff4d4f">*</span></div>
             <input type="text" id="sr-disease" placeholder="请输入疾病名称" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px">
           </div>
           <!-- 当日检查情况 -->
           <div style="margin-bottom:12px">
-            <div style="font-size:13px;color:#999;margin-bottom:6px">当日检查情况</div>
+            <div style="font-size:13px;color:#999;margin-bottom:6px">当日检查情况 <span style="color:#ff4d4f">*</span></div>
             <textarea id="sr-checkup" rows="3" placeholder="请描述当日检查项目及结果" style="width:100%;padding:8px 10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;resize:none"></textarea>
           </div>
           <!-- 医生建议 -->
@@ -666,18 +687,171 @@
               </div>
             </div>
           </div>
-          <!-- 客户签字 -->
-          <div style="margin-bottom:12px">
-            <div style="font-size:13px;color:#999;margin-bottom:6px">客户签字</div>
-            <div id="sr-sign-area" style="width:100%;height:120px;border:1.5px dashed #d1d5db;border-radius:8px;background:#fafafa;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden" onclick="signPad(this)">
-              <span style="font-size:13px;color:#bbb">点击此处签字</span>
+        </div>
+        <!-- 步骤1底部按钮 -->
+        <div id="sr-step1-btns" style="margin:0 12px 24px;display:flex;gap:8px">
+          <div class="btn-plain" style="flex:1" onclick="saveServiceRecordDraft()">保存草稿</div>
+          <div class="btn-primary" style="flex:1" onclick="goSrStep2()">下一步</div>
+        </div>
+
+        <!-- 步骤2：客户签字 -->
+        <div id="sr-step2" class="hidden">
+          <div class="card" style="margin:8px 12px;padding:12px 14px">
+            <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:12px">客户签字确认</div>
+            <div style="font-size:13px;color:#999;margin-bottom:8px">请客户在下方签字区域完成签字确认</div>
+            <!-- 签字入口 -->
+            <div id="sr-sign-area" style="width:100%;height:140px;border:1.5px dashed #d1d5db;border-radius:8px;background:#fafafa;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden" onclick="goSignature()">
+              <svg viewBox="0 0 24 24" style="width:32px;height:32px;fill:#bbb;margin-bottom:8px"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              <span style="font-size:13px;color:#bbb">点击进入签字</span>
+            </div>
+            <div id="sr-sign-done" class="hidden" style="margin-top:8px;padding:8px 12px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;gap:8px">
+              <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#10B981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+              <span style="font-size:13px;color:#10B981">客户已签字</span>
             </div>
           </div>
+          <!-- 步骤2底部按钮 -->
+          <div style="margin:0 12px 24px;display:flex;gap:8px">
+            <div class="btn-plain" style="flex:1" onclick="goSrStep1()">上一步</div>
+            <div class="btn-primary" style="flex:1" onclick="submitServiceRecord()">提交回填</div>
+          </div>
         </div>
-        <!-- 底部按钮 -->
-        <div style="margin:0 12px 24px;display:flex;gap:8px">
-          <div class="btn-plain" style="flex:1" onclick="saveServiceRecord(true)">保存</div>
-          <div class="btn-primary" style="flex:1" onclick="saveServiceRecord(false)">回填提交</div>
+      </div>
+
+      <!-- 客户签字页 -->
+      <div id="page-signature" class="hidden">
+        <div class="page-nav">
+          <span class="page-nav-back" onclick="showPage('servicerecord')">&lsaquo;</span>
+          客户签字
+        </div>
+        <div style="padding:16px 12px">
+          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:6px">请在下方区域签字</div>
+          <div style="font-size:12px;color:#999;margin-bottom:16px">请客户用手指在签字区域内签名</div>
+          <div id="sign-pad" style="width:100%;height:220px;border:2px dashed #d1d5db;border-radius:12px;background:#fafafa;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden" onclick="signPad(this)">
+            <span style="font-size:14px;color:#bbb">点击此处签字</span>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:8px">
+            <div class="btn-plain" style="flex:1" onclick="resetSign()">重签</div>
+            <div class="btn-primary" style="flex:1" onclick="confirmSign()">确认签字</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 用户评价页 -->
+      <div id="page-evaluation" class="hidden">
+        <div class="page-nav">
+          <span class="page-nav-back" onclick="showPage('service')">&lsaquo;</span>
+          服务评价
+        </div>
+        <div style="padding:20px 12px;text-align:center">
+          <div style="width:64px;height:64px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+            <svg viewBox="0 0 24 24" style="width:36px;height:36px;fill:#10B981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+          </div>
+          <div style="font-size:18px;font-weight:700;color:#333;margin-bottom:6px">服务已完成</div>
+          <div style="font-size:13px;color:#999;margin-bottom:24px">请对本次服务进行评价</div>
+        </div>
+        <div class="card" style="margin:0 12px;padding:16px">
+          <!-- 星级评分 -->
+          <div style="text-align:center;margin-bottom:20px">
+            <div style="font-size:13px;color:#999;margin-bottom:10px">整体满意度</div>
+            <div id="star-rating" style="display:flex;justify-content:center;gap:8px">
+              <span class="star" data-v="1" onclick="setStar(1)" style="font-size:32px;cursor:pointer;color:#ddd">&#9733;</span>
+              <span class="star" data-v="2" onclick="setStar(2)" style="font-size:32px;cursor:pointer;color:#ddd">&#9733;</span>
+              <span class="star" data-v="3" onclick="setStar(3)" style="font-size:32px;cursor:pointer;color:#ddd">&#9733;</span>
+              <span class="star" data-v="4" onclick="setStar(4)" style="font-size:32px;cursor:pointer;color:#ddd">&#9733;</span>
+              <span class="star" data-v="5" onclick="setStar(5)" style="font-size:32px;cursor:pointer;color:#ddd">&#9733;</span>
+            </div>
+            <div id="rating-text" style="font-size:13px;color:#999;margin-top:8px">请选择评分</div>
+          </div>
+          <!-- 评价标签 -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:13px;color:#999;margin-bottom:8px">服务标签（可多选）</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <span class="eval-tag" onclick="this.classList.toggle('selected')" style="padding:6px 14px;border-radius:20px;font-size:12px;background:#f5f5f5;color:#666;cursor:pointer;border:1px solid transparent">&#128077;态度专业</span>
+              <span class="eval-tag" onclick="this.classList.toggle('selected')" style="padding:6px 14px;border-radius:20px;font-size:12px;background:#f5f5f5;color:#666;cursor:pointer;border:1px solid transparent">&#9202;准时到达</span>
+              <span class="eval-tag" onclick="this.classList.toggle('selected')" style="padding:6px 14px;border-radius:20px;font-size:12px;background:#f5f5f5;color:#666;cursor:pointer;border:1px solid transparent">&#128172;沟通顺畅</span>
+              <span class="eval-tag" onclick="this.classList.toggle('selected')" style="padding:6px 14px;border-radius:20px;font-size:12px;background:#f5f5f5;color:#666;cursor:pointer;border:1px solid transparent">&#128138;服务细致</span>
+              <span class="eval-tag" onclick="this.classList.toggle('selected')" style="padding:6px 14px;border-radius:20px;font-size:12px;background:#f5f5f5;color:#666;cursor:pointer;border:1px solid transparent">&#128591;值得推荐</span>
+            </div>
+          </div>
+          <!-- 文字评价 -->
+          <div style="margin-bottom:16px">
+            <div style="font-size:13px;color:#999;margin-bottom:6px">文字评价 <span style="color:#ccc">（选填）</span></div>
+            <textarea id="eval-text" rows="3" maxlength="200" placeholder="请输入您对本次服务的评价..." style="width:100%;padding:10px;border:1px solid #e5e7eb;border-radius:8px;font-size:13px;resize:none;outline:none"></textarea>
+          </div>
+        </div>
+        <div style="margin:16px 12px 24px">
+          <div class="btn-primary" onclick="submitEvaluation()">提交评价</div>
+        </div>
+      </div>
+
+      <!-- 入驻审批通过-签署电子合同页 -->
+      <div id="page-signcontract" class="hidden">
+        <div class="page-nav">
+          <span class="page-nav-back" onclick="showPage('mine')">&lsaquo;</span>
+          签署电子合同
+        </div>
+        <!-- 审批通过状态 -->
+        <div style="padding:24px 12px;text-align:center">
+          <div style="width:72px;height:72px;background:#d1fae5;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">
+            <svg viewBox="0 0 24 24" style="width:40px;height:40px;fill:#10B981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+          </div>
+          <div style="font-size:20px;font-weight:700;color:#333;margin-bottom:6px">入驻审批已通过</div>
+          <div style="font-size:13px;color:#999">恭喜您通过审核，请签署电子合同后正式入驻</div>
+        </div>
+        <!-- 合同信息 -->
+        <div class="card" style="margin:0 12px 12px;padding:14px 16px">
+          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:12px">电子合同信息</div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5">
+            <span style="font-size:13px;color:#999">合同编号</span>
+            <span style="font-size:13px;color:#333">KY-2026-0715-001</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5">
+            <span style="font-size:13px;color:#999">合同类型</span>
+            <span style="font-size:13px;color:#333">陪诊师入驻服务协议</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5">
+            <span style="font-size:13px;color:#999">签约方</span>
+            <span style="font-size:13px;color:#333">康元方舟 + 陪诊师</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f5f5f5">
+            <span style="font-size:13px;color:#999">有效期</span>
+            <span style="font-size:13px;color:#333">2026-07-15 至 2027-07-14</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;padding:6px 0">
+            <span style="font-size:13px;color:#999">签署方式</span>
+            <span style="font-size:13px;color:#333">电子签章</span>
+          </div>
+        </div>
+        <!-- 合同预览 -->
+        <div class="card" style="margin:0 12px 12px;padding:14px 16px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:14px;font-weight:700;color:#333">合同正文</span>
+            <span style="font-size:12px;color:#10B981;cursor:pointer" onclick="showModal('合同正文','此处为陪诊师入驻服务协议全文预览...','<div class=\\'btn-primary\\' onclick=\\'closeModal()\\'>我知道了</div>')">查看全文 &rsaquo;</span>
+          </div>
+          <div style="font-size:12px;color:#999;line-height:1.8;max-height:120px;overflow-y:auto;background:#f9fafb;padding:10px;border-radius:8px">
+            第一条 服务范围：陪诊师为平台用户提供就医陪同、代办跑腿、取报告等服务。<br>
+            第二条 服务规范：陪诊师应准时到达、着装整洁、态度专业。<br>
+            第三条 收费标准：按照平台统一定价执行，陪诊师不得私下收费。<br>
+            第四条 保密义务：陪诊师对患者信息负有保密义务。<br>
+            第五条 违约责任：如违反协议约定，平台有权终止合作。<br>
+            ... <span style="color:#10B981;cursor:pointer" onclick="showModal('合同正文','此处为陪诊师入驻服务协议全文预览...','<div class=\\'btn-primary\\' onclick=\\'closeModal()\\'>我知道了</div>')">展开全文</span>
+          </div>
+        </div>
+        <!-- 签字区域 -->
+        <div class="card" style="margin:0 12px 12px;padding:14px 16px">
+          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:10px">签字签署</div>
+          <div style="font-size:12px;color:#999;margin-bottom:8px">请在下方区域签字确认</div>
+          <div id="contract-sign-area" style="width:100%;height:140px;border:2px dashed #d1d5db;border-radius:8px;background:#fafafa;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden" onclick="signContract(this)">
+            <span style="font-size:13px;color:#bbb">点击此处签字</span>
+          </div>
+        </div>
+        <!-- 同意条款 -->
+        <div style="display:flex;align-items:center;margin:12px 12px;font-size:12px;color:#666">
+          <input type="checkbox" id="contract-agree" style="margin-right:6px;accent-color:#10B981">
+          <span>我已阅读并同意</span><span style="color:#10B981;cursor:pointer" onclick="showModal('合同正文','此处为陪诊师入驻服务协议全文预览...','<div class=\\'btn-primary\\' onclick=\\'closeModal()\\'>我知道了</div>')">《陪诊师入驻服务协议》</span>
+        </div>
+        <div style="margin:12px 12px 24px">
+          <div class="btn-primary" onclick="confirmContract()">确认签署并入驻</div>
         </div>
       </div>
 
@@ -714,68 +888,31 @@
         </div>
       </div>
 
-      <!-- 可服务时间设置页 - 星期模板 + 日历上下午 -->
+      <!-- 可服务时间设置页 - 周几多选 -->
       <div id="page-servicetime" class="hidden">
         <div class="page-nav">
           <span class="page-nav-back" onclick="showPage('mine')">&lsaquo;</span>
           可服务时间
         </div>
-        <!-- 图例 -->
-        <div style="display:flex;align-items:center;gap:16px;margin:8px 12px 4px;font-size:11px;color:#999">
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#10B981;display:inline-block"></span> 可服务</span>
-          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block"></span> 不可服务</span>
-        </div>
-        <!-- 星期模板栏 -->
-        <div class="card" style="margin:8px 12px;padding:12px 10px">
-          <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:10px">每周默认可服务日</div>
-          <div style="display:flex;justify-content:center;gap:8px">
-            <div class="weekday-chip" data-day="1" onclick="toggleWeekDay(this)">一</div>
-            <div class="weekday-chip" data-day="2" onclick="toggleWeekDay(this)">二</div>
-            <div class="weekday-chip" data-day="3" onclick="toggleWeekDay(this)">三</div>
-            <div class="weekday-chip" data-day="4" onclick="toggleWeekDay(this)">四</div>
-            <div class="weekday-chip" data-day="5" onclick="toggleWeekDay(this)">五</div>
-            <div class="weekday-chip" data-day="6" onclick="toggleWeekDay(this)">六</div>
-            <div class="weekday-chip" data-day="0" onclick="toggleWeekDay(this)">日</div>
+        <div style="padding:16px 12px">
+          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:6px">选择每周可服务日期</div>
+          <div style="font-size:12px;color:#999;margin-bottom:16px">点击选中或取消，支持多选</div>
+          <div id="weekday-selector" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px">
+            <div class="weekday-chip active" data-day="1" onclick="toggleWeekDayMulti(this)">周一</div>
+            <div class="weekday-chip active" data-day="2" onclick="toggleWeekDayMulti(this)">周二</div>
+            <div class="weekday-chip active" data-day="3" onclick="toggleWeekDayMulti(this)">周三</div>
+            <div class="weekday-chip active" data-day="4" onclick="toggleWeekDayMulti(this)">周四</div>
+            <div class="weekday-chip active" data-day="5" onclick="toggleWeekDayMulti(this)">周五</div>
+            <div class="weekday-chip" data-day="6" onclick="toggleWeekDayMulti(this)">周六</div>
+            <div class="weekday-chip" data-day="0" onclick="toggleWeekDayMulti(this)">周日</div>
           </div>
-        </div>
-        <!-- 月份导航 -->
-        <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 12px 8px;padding:0 4px">
-          <span style="font-size:18px;color:#333;font-weight:700;cursor:pointer" onclick="changeCalMonth(-1)">&lsaquo;</span>
-          <span id="cal-month-label" style="font-size:16px;font-weight:600;color:#333"></span>
-          <span style="font-size:18px;color:#333;font-weight:700;cursor:pointer" onclick="changeCalMonth(1)">&rsaquo;</span>
-        </div>
-        <!-- 日历 -->
-        <div class="card" style="padding:12px 10px;margin:0 12px">
-          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;text-align:center;margin-bottom:4px">
-            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">日</div>
-            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">一</div>
-            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">二</div>
-            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">三</div>
-            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">四</div>
-            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">五</div>
-            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">六</div>
-          </div>
-          <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;text-align:center"></div>
-        </div>
-        <!-- 选中日期快捷编辑弹层 -->
-        <div id="cal-edit-panel" class="hidden" style="margin:0 12px 12px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
-          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px;border-bottom:1px solid #f0f0f0">
-            <span id="cal-edit-date-label" style="font-size:14px;font-weight:700;color:#333"></span>
-            <span style="font-size:18px;color:#999;cursor:pointer" onclick="closeCalEdit()">&times;</span>
-          </div>
-          <div style="padding:10px 14px;display:flex;justify-content:space-around">
-            <div style="text-align:center;cursor:pointer" onclick="toggleEditSlot('am')">
-              <div id="cal-edit-am-dot" style="width:28px;height:28px;border-radius:50%;margin:0 auto 4px;border:2px solid #ccc;background:#fff;transition:all .15s"></div>
-              <div style="font-size:12px;color:#666">上午</div>
-            </div>
-            <div style="text-align:center;cursor:pointer" onclick="toggleEditSlot('pm')">
-              <div id="cal-edit-pm-dot" style="width:28px;height:28px;border-radius:50%;margin:0 auto 4px;border:2px solid #ccc;background:#fff;transition:all .15s"></div>
-              <div style="font-size:12px;color:#666">下午</div>
-            </div>
+          <div style="background:#f0fdf4;border-radius:10px;padding:12px 14px;margin-bottom:16px">
+            <div style="font-size:12px;color:#10B981;font-weight:600;margin-bottom:4px">已选可服务日</div>
+            <div id="selected-days-display" style="font-size:13px;color:#333;line-height:1.6">周一、周二、周三、周四、周五</div>
           </div>
         </div>
         <div style="margin:0 12px 24px">
-          <div class="btn-primary" onclick="saveServiceTime()">保存</div>
+          <div class="btn-primary" onclick="saveServiceTimeMulti()">保存</div>
         </div>
       </div>
     </div>
@@ -976,7 +1113,7 @@
 
     function switchTab(el) { document.querySelectorAll('.tab-wrap .tab-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); currentTab = parseInt(el.dataset.idx); renderOrders(); }
     function switchNav(el) { document.querySelectorAll('.tabbar-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); currentNav = el.dataset.page; showPage(currentNav); }
-    function showPage(page) { ['service','mine','settings','settlein','sendsms','servicerecord','servicesummary','servicetime','orderdetail'].forEach(p => document.getElementById('page-'+p).classList.add('hidden')); document.getElementById('page-'+page).classList.remove('hidden'); document.getElementById('screen').scrollTop = 0; if (page === 'servicetime' && !calYear) initCalendar(); }
+    function showPage(page) { ['service','mine','settings','settlein','sendsms','servicerecord','servicesummary','servicetime','orderdetail','signature','evaluation','signcontract'].forEach(p => document.getElementById('page-'+p).classList.add('hidden')); document.getElementById('page-'+page).classList.remove('hidden'); document.getElementById('screen').scrollTop = 0; }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 2000); }
     function showPrivacy() { showModal('隐私协议', '本协议说明我们如何收集、使用和保护您的个人信息。', `<div class="btn-primary" onclick="closeModal()">我知道了</div>`); }
     function showModal(title, body, foot) { document.getElementById('modal-title').innerText = title; document.getElementById('modal-body').innerHTML = body; document.getElementById('modal-foot').innerHTML = foot; document.getElementById('modal-mask').classList.remove('hidden'); document.getElementById('modal').classList.remove('hidden'); }
@@ -1110,8 +1247,12 @@
       imgBox.innerHTML = '<div style="width:72px;height:72px;border:1.5px dashed #d1d5db;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer" onclick="addSrImage(this)"><span style="font-size:24px;color:#ccc">+</span><span style="font-size:10px;color:#999">上传</span></div>';
       // 重置签字
       var signArea = document.getElementById('sr-sign-area');
-      signArea.innerHTML = '<span style="font-size:13px;color:#bbb">点击此处签字</span>';
+      signArea.innerHTML = '<svg viewBox="0 0 24 24" style="width:32px;height:32px;fill:#bbb;margin-bottom:8px"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg><span style="font-size:13px;color:#bbb">点击进入签字</span>';
       signArea.style.background = '#fafafa';
+      signArea.style.borderColor = '#d1d5db';
+      document.getElementById('sr-sign-done').classList.add('hidden');
+      // 重置步骤
+      goSrStep1();
       showPage('servicerecord');
     }
 
@@ -1133,6 +1274,37 @@
       if (addBtn && srImageCount < 5) addBtn.style.display = '';
     }
 
+    function goSrStep1() {
+      document.getElementById('sr-step1').classList.remove('hidden');
+      document.getElementById('sr-step1-btns').classList.remove('hidden');
+      document.getElementById('sr-step2').classList.add('hidden');
+      // 更新指示器
+      document.querySelector('#sr-step1-indicator span:first-child').style.background = '#10B981';
+      document.querySelector('#sr-step1-indicator span:first-child').style.color = '#fff';
+      document.querySelector('#sr-step1-indicator span:last-child').style.color = '#10B981';
+      document.getElementById('sr-step2-dot').style.background = '#e5e7eb';
+      document.getElementById('sr-step2-dot').style.color = '#999';
+      document.getElementById('sr-step2-label').style.color = '#999';
+    }
+
+    function goSrStep2() {
+      if (!document.getElementById('sr-expert').value) { showToast('请选择服务专家'); return; }
+      if (!document.getElementById('sr-disease').value.trim()) { showToast('请填写疾病名称'); return; }
+      if (!document.getElementById('sr-checkup').value.trim()) { showToast('请填写当日检查情况'); return; }
+      document.getElementById('sr-step1').classList.add('hidden');
+      document.getElementById('sr-step1-btns').classList.add('hidden');
+      document.getElementById('sr-step2').classList.remove('hidden');
+      // 更新指示器
+      document.querySelector('#sr-step1-indicator span:first-child').style.background = '#10B981';
+      document.getElementById('sr-step2-dot').style.background = '#10B981';
+      document.getElementById('sr-step2-dot').style.color = '#fff';
+      document.getElementById('sr-step2-label').style.color = '#10B981';
+    }
+
+    function goSignature() {
+      showPage('signature');
+    }
+
     function signPad(el) {
       if (srSigned) return;
       srSigned = true;
@@ -1140,19 +1312,82 @@
       el.style.background = '#fff';
       el.style.borderColor = '#10B981';
       showToast('签字完成');
+      // 返回服务回填步骤2
+      setTimeout(function() {
+        // 更新服务回填页面的签字状态
+        var signArea = document.getElementById('sr-sign-area');
+        signArea.innerHTML = '<svg viewBox="0 0 200 80" style="width:100%;height:100%"><path d="M20,50 Q40,20 60,40 T100,45 Q130,25 160,50" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+        signArea.style.background = '#fff';
+        signArea.style.borderColor = '#10B981';
+        document.getElementById('sr-sign-done').classList.remove('hidden');
+        showPage('servicerecord');
+        goSrStep2();
+      }, 800);
     }
 
-    function saveServiceRecord(isDraft) {
-      if (!isDraft) {
-        if (!document.getElementById('sr-expert').value.trim()) { showToast('请填写服务专家'); return; }
-        if (!document.getElementById('sr-disease').value.trim()) { showToast('请填写疾病名称'); return; }
-        if (!document.getElementById('sr-checkup').value.trim()) { showToast('请填写当日检查情况'); return; }
-        if (!srSigned) { showToast('请完成客户签字'); return; }
-        showToast('回填已提交');
-        setTimeout(function() { showPage('orderdetail'); }, 1000);
-      } else {
-        showToast('已保存草稿');
-      }
+    function saveServiceRecordDraft() {
+      showToast('已保存草稿');
+    }
+
+    function submitServiceRecord() {
+      if (!srSigned) { showToast('请完成客户签字'); return; }
+      showToast('回填已提交');
+      setTimeout(function() { showPage('evaluation'); }, 1000);
+    }
+
+    // ========== 签字页 ==========
+    function resetSign() {
+      srSigned = false;
+      var pad = document.getElementById('sign-pad');
+      pad.innerHTML = '<span style="font-size:14px;color:#bbb">点击此处签字</span>';
+      pad.style.background = '#fafafa';
+      pad.style.borderColor = '#d1d5db';
+    }
+
+    function confirmSign() {
+      if (!srSigned) { showToast('请先完成签字'); return; }
+      showToast('签字确认成功');
+    }
+
+    // ========== 用户评价 ==========
+    var currentRating = 0;
+    var ratingLabels = ['', '很不满意', '不满意', '一般', '满意', '非常满意'];
+
+    function setStar(v) {
+      currentRating = v;
+      document.querySelectorAll('.star').forEach(function(s) {
+        var sv = parseInt(s.getAttribute('data-v'));
+        s.style.color = sv <= v ? '#F59E0B' : '#ddd';
+      });
+      document.getElementById('rating-text').innerText = ratingLabels[v];
+    }
+
+    function submitEvaluation() {
+      if (currentRating === 0) { showToast('请选择评分'); return; }
+      showToast('评价已提交，感谢您的反馈');
+      setTimeout(function() { showPage('service'); }, 1500);
+    }
+
+    // ========== 电子合同签署 ==========
+    var contractSigned = false;
+
+    function signContract(el) {
+      if (contractSigned) return;
+      contractSigned = true;
+      el.innerHTML = '<svg viewBox="0 0 200 80" style="width:100%;height:100%"><path d="M20,50 Q40,20 60,40 T100,45 Q130,25 160,50" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+      el.style.background = '#fff';
+      el.style.borderColor = '#10B981';
+      showToast('签字完成');
+    }
+
+    function confirmContract() {
+      if (!contractSigned) { showToast('请先完成签字'); return; }
+      if (!document.getElementById('contract-agree').checked) { showToast('请同意入驻服务协议'); return; }
+      showToast('合同签署成功，欢迎加入康元方舟');
+      setTimeout(function() {
+        settleStatus('settled');
+        showPage('mine');
+      }, 1500);
     }
 
     // ========== 4. 结束服务前置校验 ==========
@@ -1365,192 +1600,40 @@
       if (qualCerts2.length < 1) { showToast('请至少添加1个资质证书'); return; }
       if (!document.getElementById('si-agree').checked) { showToast('请同意入驻协议与隐私条款'); return; }
       showModal('提交成功', '您的入驻申请已提交，工作人员将在 1-3 个工作日内完成审核。', `<div class="btn-primary" onclick="closeModal();settleStatus('auditing');showPage('mine')">确定</div>`);
+      // 模拟审批通过（demo演示用）
+      setTimeout(function() {
+        showModal('审核通过', '恭喜！您的入驻申请已通过审核，请签署电子合同完成入驻。', `<div class="btn-primary" onclick="closeModal();showPage('signcontract')">去签署合同</div>`);
+      }, 3000);
     }
 
-    // ========== 8. 可服务时间设置（星期模板 + 日历上下午） ==========
-    let calYear, calMonth, calData = {}, calEditDate = null;
-    // calData 结构: { '2026-07-15': { am: true, pm: false }, ... }
-    // weekDefaults: 哪些星期几默认可服务 (0=日 1=一 ... 6=六)
-    let weekDefaults = { 1: true, 2: true, 3: true, 4: true, 5: true, 6: false, 0: false };
+    // ========== 8. 可服务时间设置（周几多选） ==========
+    var weekDayNames = { 0: '周日', 1: '周一', 2: '周二', 3: '周三', 4: '周四', 5: '周五', 6: '周六' };
+    var selectedDays = [1, 2, 3, 4, 5]; // 默认周一至周五
 
-    function initCalendar() {
-      var now = new Date();
-      calYear = now.getFullYear();
-      calMonth = now.getMonth();
-      // 初始化当月数据：根据星期默认模板生成
-      applyWeekDefaultsToMonth(calYear, calMonth);
-      // 渲染星期芯片
-      renderWeekChips();
-      renderCalendar();
-    }
-
-    function applyWeekDefaultsToMonth(y, m) {
-      var daysInMonth = new Date(y, m + 1, 0).getDate();
-      for (var d = 1; d <= daysInMonth; d++) {
-        var date = new Date(y, m, d);
-        var dayOfWeek = date.getDay(); // 0=周日
-        var key = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-        if (!calData[key]) {
-          if (weekDefaults[dayOfWeek]) {
-            calData[key] = { am: true, pm: true };
-          } else {
-            calData[key] = { am: false, pm: false };
-          }
-        }
-      }
-    }
-
-    function toggleWeekDay(el) {
+    function toggleWeekDayMulti(el) {
       var day = parseInt(el.getAttribute('data-day'));
-      weekDefaults[day] = !weekDefaults[day];
       el.classList.toggle('active');
-      // 同步更新当月对应日期
-      var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-      for (var d = 1; d <= daysInMonth; d++) {
-        var date = new Date(calYear, calMonth, d);
-        if (date.getDay() === day) {
-          var key = calYear + '-' + String(calMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-          if (weekDefaults[day]) {
-            calData[key] = { am: true, pm: true };
-          } else {
-            calData[key] = { am: false, pm: false };
-          }
-        }
+      var idx = selectedDays.indexOf(day);
+      if (idx >= 0) {
+        selectedDays.splice(idx, 1);
+      } else {
+        selectedDays.push(day);
       }
-      renderCalendar();
+      updateSelectedDaysDisplay();
     }
 
-    function renderWeekChips() {
-      document.querySelectorAll('.weekday-chip').forEach(function(chip) {
-        var day = parseInt(chip.getAttribute('data-day'));
-        if (weekDefaults[day]) chip.classList.add('active');
-        else chip.classList.remove('active');
-      });
-    }
-
-    function changeCalMonth(delta) {
-      calMonth += delta;
-      if (calMonth > 11) { calMonth = 0; calYear++; }
-      if (calMonth < 0) { calMonth = 11; calYear--; }
-      // 为新月份生成默认数据
-      applyWeekDefaultsToMonth(calYear, calMonth);
-      closeCalEdit();
-      renderCalendar();
-    }
-
-    function renderCalendar() {
-      var monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
-      document.getElementById('cal-month-label').innerText = calYear + '年 ' + monthNames[calMonth];
-
-      var grid = document.getElementById('cal-grid');
-      grid.innerHTML = '';
-
-      var firstDay = new Date(calYear, calMonth, 1).getDay();
-      var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-      var prevMonthDays = new Date(calYear, calMonth, 0).getDate();
-      var today = new Date();
-      var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-
-      // 上月补位
-      for (var i = firstDay - 1; i >= 0; i--) {
-        var d = prevMonthDays - i;
-        var cell = buildCalCell(d, true, false, false, '');
-        grid.appendChild(cell);
-      }
-
-      // 本月日期
-      for (var d = 1; d <= daysInMonth; d++) {
-        var dateStr = calYear + '-' + String(calMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
-        var isToday = (dateStr === todayStr);
-        var data = calData[dateStr] || { am: false, pm: false };
-        var cell = buildCalCell(d, false, isToday, data.am, data.pm);
-        cell.setAttribute('data-date', dateStr);
-        cell.onclick = (function(ds) {
-          return function() { openCalEdit(ds); };
-        })(dateStr);
-        grid.appendChild(cell);
-      }
-
-      // 下月补位
-      var totalCells = firstDay + daysInMonth;
-      var remaining = (7 - totalCells % 7) % 7;
-      for (var i = 1; i <= remaining; i++) {
-        var cell = buildCalCell(i, true, false, false, '');
-        grid.appendChild(cell);
+    function updateSelectedDaysDisplay() {
+      var sorted = selectedDays.slice().sort(function(a, b) { return a - b; });
+      var names = sorted.map(function(d) { return weekDayNames[d]; });
+      var display = document.getElementById('selected-days-display');
+      if (display) {
+        display.innerText = names.length > 0 ? names.join('、') : '暂未选择可服务日';
       }
     }
 
-    function buildCalCell(day, isOtherMonth, isToday, amOn, pmOn) {
-      var cell = document.createElement('div');
-      cell.className = 'cal-cell';
-      if (isOtherMonth) cell.classList.add('other-month');
-      if (isToday) cell.classList.add('today');
-
-      var daySpan = document.createElement('span');
-      daySpan.className = 'cal-day';
-      daySpan.innerText = day;
-      cell.appendChild(daySpan);
-
-      if (!isOtherMonth) {
-        var dotsDiv = document.createElement('div');
-        dotsDiv.className = 'cal-dots';
-        var amDot = document.createElement('span');
-        amDot.className = 'cal-dot ' + (amOn ? 'on' : 'off');
-        dotsDiv.appendChild(amDot);
-        var pmDot = document.createElement('span');
-        pmDot.className = 'cal-dot ' + (pmOn ? 'on' : 'off');
-        dotsDiv.appendChild(pmDot);
-        cell.appendChild(dotsDiv);
-      }
-      return cell;
-    }
-
-    function openCalEdit(dateStr) {
-      calEditDate = dateStr;
-      var panel = document.getElementById('cal-edit-panel');
-      var label = document.getElementById('cal-edit-date-label');
-      // 格式化日期显示: 7月15日 周二
-      var parts = dateStr.split('-');
-      var m = parseInt(parts[1]);
-      var d = parseInt(parts[2]);
-      var dayNames = ['周日','周一','周二','周三','周四','周五','周六'];
-      var dt = new Date(parseInt(parts[0]), m - 1, d);
-      label.innerText = m + '月' + d + '日 ' + dayNames[dt.getDay()];
-
-      var data = calData[dateStr] || { am: false, pm: false };
-      updateEditDots(data.am, data.pm);
-      panel.classList.remove('hidden');
-    }
-
-    function closeCalEdit() {
-      calEditDate = null;
-      document.getElementById('cal-edit-panel').classList.add('hidden');
-    }
-
-    function updateEditDots(amOn, pmOn) {
-      var amDot = document.getElementById('cal-edit-am-dot');
-      var pmDot = document.getElementById('cal-edit-pm-dot');
-      if (amOn) { amDot.style.background = '#10B981'; amDot.style.borderColor = '#10B981'; }
-      else { amDot.style.background = '#fff'; amDot.style.borderColor = '#ccc'; }
-      if (pmOn) { pmDot.style.background = '#10B981'; pmDot.style.borderColor = '#10B981'; }
-      else { pmDot.style.background = '#fff'; pmDot.style.borderColor = '#ccc'; }
-    }
-
-    function toggleEditSlot(slot) {
-      if (!calEditDate) return;
-      var data = calData[calEditDate] || { am: false, pm: false };
-      data[slot] = !data[slot];
-      calData[calEditDate] = data;
-      updateEditDots(data.am, data.pm);
-      renderCalendar();
-    }
-
-    function saveServiceTime() {
-      var count = 0;
-      Object.keys(calData).forEach(function(k) {
-        if (calData[k].am || calData[k].pm) count++;
-      });
-      showToast('可服务时间已保存（' + count + '天）');
+    function saveServiceTimeMulti() {
+      if (selectedDays.length === 0) { showToast('请至少选择一个可服务日'); return; }
+      showToast('可服务时间已保存');
       setTimeout(function() { showPage('mine'); }, 1000);
     }
 
