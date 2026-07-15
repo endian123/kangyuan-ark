@@ -682,9 +682,18 @@
             <span style="width:90px;font-size:14px">城市</span>
             <input style="flex:1;border:none;font-size:14px;outline:none" placeholder="请输入可服务城市" id="si-city">
           </div>
-          <div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #eee">
-            <span style="width:90px;font-size:14px">可服务时间</span>
-            <span style="flex:1;font-size:13px;color:#10B981;cursor:pointer" onclick="showPage('servicetime')">前往设置 &rsaquo;</span>
+          <div style="min-height:44px;border-bottom:1px solid #eee;padding:10px 0">
+            <div style="font-size:14px;margin-bottom:8px">可服务时间</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <div class="weekday-chip active" data-day="1" onclick="toggleSettleWeekDay(this)">周一</div>
+              <div class="weekday-chip active" data-day="2" onclick="toggleSettleWeekDay(this)">周二</div>
+              <div class="weekday-chip active" data-day="3" onclick="toggleSettleWeekDay(this)">周三</div>
+              <div class="weekday-chip active" data-day="4" onclick="toggleSettleWeekDay(this)">周四</div>
+              <div class="weekday-chip active" data-day="5" onclick="toggleSettleWeekDay(this)">周五</div>
+              <div class="weekday-chip" data-day="6" onclick="toggleSettleWeekDay(this)">周六</div>
+              <div class="weekday-chip" data-day="0" onclick="toggleSettleWeekDay(this)">周日</div>
+            </div>
+            <div style="font-size:11px;color:#999;margin-top:6px">点击选择每周可服务的日期，支持多选</div>
           </div>
           <div style="padding:10px 0;border-bottom:1px solid #eee">
             <div style="display:flex;justify-content:space-between;margin-bottom:8px">
@@ -1087,31 +1096,68 @@
         </div>
       </div>
 
-      <!-- 可服务时间设置页 - 周几多选 -->
+      <!-- 可服务时间设置页 - 星期模板 + 日历上下午 -->
       <div id="page-servicetime" class="hidden">
         <div class="page-nav">
           <span class="page-nav-back" onclick="showPage('mine')">&lsaquo;</span>
           可服务时间
         </div>
-        <div style="padding:16px 12px">
-          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:6px">选择每周可服务日期</div>
-          <div style="font-size:12px;color:#999;margin-bottom:16px">点击选中或取消，支持多选</div>
-          <div id="weekday-selector" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px">
-            <div class="weekday-chip active" data-day="1" onclick="toggleWeekDayMulti(this)">周一</div>
-            <div class="weekday-chip active" data-day="2" onclick="toggleWeekDayMulti(this)">周二</div>
-            <div class="weekday-chip active" data-day="3" onclick="toggleWeekDayMulti(this)">周三</div>
-            <div class="weekday-chip active" data-day="4" onclick="toggleWeekDayMulti(this)">周四</div>
-            <div class="weekday-chip active" data-day="5" onclick="toggleWeekDayMulti(this)">周五</div>
-            <div class="weekday-chip" data-day="6" onclick="toggleWeekDayMulti(this)">周六</div>
-            <div class="weekday-chip" data-day="0" onclick="toggleWeekDayMulti(this)">周日</div>
+        <!-- 图例 -->
+        <div style="display:flex;align-items:center;gap:16px;margin:8px 12px 4px;font-size:11px;color:#999">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#10B981;display:inline-block"></span> 可服务</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block"></span> 不可服务</span>
+        </div>
+        <!-- 星期模板栏 -->
+        <div class="card" style="margin:8px 12px;padding:12px 10px">
+          <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:10px">每周默认可服务日</div>
+          <div style="display:flex;justify-content:center;gap:8px">
+            <div class="weekday-chip" data-day="1" onclick="toggleWeekDay(this)">一</div>
+            <div class="weekday-chip" data-day="2" onclick="toggleWeekDay(this)">二</div>
+            <div class="weekday-chip" data-day="3" onclick="toggleWeekDay(this)">三</div>
+            <div class="weekday-chip" data-day="4" onclick="toggleWeekDay(this)">四</div>
+            <div class="weekday-chip" data-day="5" onclick="toggleWeekDay(this)">五</div>
+            <div class="weekday-chip" data-day="6" onclick="toggleWeekDay(this)">六</div>
+            <div class="weekday-chip" data-day="0" onclick="toggleWeekDay(this)">日</div>
           </div>
-          <div style="background:#f0fdf4;border-radius:10px;padding:12px 14px;margin-bottom:16px">
-            <div style="font-size:12px;color:#10B981;font-weight:600;margin-bottom:4px">已选可服务日</div>
-            <div id="selected-days-display" style="font-size:13px;color:#333;line-height:1.6">周一、周二、周三、周四、周五</div>
+        </div>
+        <!-- 月份导航 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 12px 8px;padding:0 4px">
+          <span style="font-size:18px;color:#333;font-weight:700;cursor:pointer" onclick="changeCalMonth(-1)">&lsaquo;</span>
+          <span id="cal-month-label" style="font-size:16px;font-weight:600;color:#333"></span>
+          <span style="font-size:18px;color:#333;font-weight:700;cursor:pointer" onclick="changeCalMonth(1)">&rsaquo;</span>
+        </div>
+        <!-- 日历 -->
+        <div class="card" style="padding:12px 10px;margin:0 12px">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;text-align:center;margin-bottom:4px">
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">日</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">一</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">二</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">三</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">四</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">五</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">六</div>
+          </div>
+          <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;text-align:center"></div>
+        </div>
+        <!-- 选中日期快捷编辑弹层 -->
+        <div id="cal-edit-panel" class="hidden" style="margin:0 12px 12px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px;border-bottom:1px solid #f0f0f0">
+            <span id="cal-edit-date-label" style="font-size:14px;font-weight:700;color:#333"></span>
+            <span style="font-size:18px;color:#999;cursor:pointer" onclick="closeCalEdit()">&times;</span>
+          </div>
+          <div style="padding:10px 14px;display:flex;justify-content:space-around">
+            <div style="text-align:center;cursor:pointer" onclick="toggleEditSlot('am')">
+              <div id="cal-edit-am-dot" style="width:28px;height:28px;border-radius:50%;margin:0 auto 4px;border:2px solid #ccc;background:#fff;transition:all .15s"></div>
+              <div style="font-size:12px;color:#666">上午</div>
+            </div>
+            <div style="text-align:center;cursor:pointer" onclick="toggleEditSlot('pm')">
+              <div id="cal-edit-pm-dot" style="width:28px;height:28px;border-radius:50%;margin:0 auto 4px;border:2px solid #ccc;background:#fff;transition:all .15s"></div>
+              <div style="font-size:12px;color:#666">下午</div>
+            </div>
           </div>
         </div>
         <div style="margin:0 12px 24px">
-          <div class="btn-primary" onclick="saveServiceTimeMulti()">保存</div>
+          <div class="btn-primary" onclick="saveServiceTime()">保存</div>
         </div>
       </div>
     </div>
@@ -2068,10 +2114,10 @@ Token 存在？
 
         
             <div style="background:#fff;border-radius:8px;padding:12px;margin-bottom:8px;border-left:3px solid #10B981">
-              <p><b>调整 7：可服务时间简化为周几多选</b></p>
-              <p style="font-size:12px;color:#888">日期：2026-07-15 | 涉及功能：F22 可服务时间设置</p>
-              <p style="font-size:13px">从日历+上下午圆点模式简化为周一至周日7个芯片多选，点击切换可服务/不可服务，已选日期在下方实时展示</p>
-              <p style="font-size:12px;color:#888">原因：简化交互，陪诊师只需选择每周可服务的日期即可</p>
+              <p><b>调整 7：入驻表单可服务时间改为周几多选</b></p>
+              <p style="font-size:12px;color:#888">日期：2026-07-15 | 涉及功能：F1 入驻申请表单</p>
+              <p style="font-size:13px">入驻申请表单中的"可服务时间"从跳转页面设置改为内联周一至周日7个芯片多选，点击切换可服务/不可服务；"我的-可服务时间设置"页面保持原日历+上下午模式不变</p>
+              <p style="font-size:12px;color:#888">原因：入驻时只需选择每周可服务的日期，简化表单填写流程</p>
             </div>
 
             <div style="background:#fff;border-radius:8px;padding:12px;margin-bottom:8px;border-left:3px solid #10B981">
@@ -4024,12 +4070,52 @@ OCR识别准确率 ≥ 90%，入驻信息填写耗时 ≤ 10分钟。
 - **原因**：结构化回填信息更利于工单追溯和运营审核
 
   
-### 调整 7：可服务时间简化为周几多选
+### 调整 7：入驻表单可服务时间改为周几多选
 
 - **日期**：2026-07-15
-- **涉及功能**：F22 可服务时间设置
-- **调整内容**：从日历+上下午圆点模式简化为周一至周日7个芯片多选，点击切换可服务/不可服务，已选日期在下方实时展示
-- **原因**：简化交互，陪诊师只需选择每周可服务的日期即可
+- **涉及功能**：F1 入驻申请表单
+- **调整内容**：入驻申请表单中的"可服务时间"从跳转页面设置改为内联周一至周日7个芯片多选，点击切换可服务/不可服务；"我的-可服务时间设置"页面保持原日历+上下午模式不变
+- **原因**：入驻时只需选择每周可服务的日期，简化表单填写流程
+
+### 调整 8：服务回填拆分为两步骤 + 服务专家改为下拉
+
+- **日期**：2026-07-15
+- **涉及功能**：F10 服务回填
+- **调整内容**：
+  - 回填页面拆分为两步：步骤1「服务信息」(状态/专家下拉/疾病/检查/建议/备注/凭证) → 步骤2「客户签字」(点击进入签字页)
+  - 服务专家从文本输入改为下拉选择（李医生/王医生/张医生等）
+- **原因**：分步骤降低填写压力，下拉选择避免输入错误
+
+### 调整 9：客户签字独立页面 + 签完进入用户评价
+
+- **日期**：2026-07-15
+- **涉及功能**：F10 服务回填 + 新增用户评价
+- **调整内容**：
+  - 客户签字从内嵌区域改为独立签字页面（大区域手写签名+重签/确认按钮）
+  - 签字确认后自动跳转用户评价页（5星评分+服务标签多选+文字评价）
+- **原因**：独立签字页提升签字仪式感，评价收集形成服务闭环
+
+### 调整 10：入驻审批通过后签署电子合同页面
+
+- **日期**：2026-07-15
+- **涉及功能**：F1 入驻流程
+- **调整内容**：新增入驻审批通过后的电子合同签署页面：
+  - 展示审批通过状态
+  - 合同信息(编号/类型/签约方/有效期)
+  - 合同正文预览(可展开全文)
+  - 签字区域
+  - 同意条款勾选
+  - 确认签署并入驻
+- **原因**：电子合同签署为入驻流程闭环，保障合规性
+
+
+
+### 调整 7：入驻表单可服务时间改为周几多选
+
+- **日期**：2026-07-15
+- **涉及功能**：F1 入驻申请表单
+- **调整内容**：入驻申请表单中的"可服务时间"从跳转页面设置改为内联周一至周日7个芯片多选，点击切换可服务/不可服务；"我的-可服务时间设置"页面保持原日历+上下午模式不变
+- **原因**：入驻时只需选择每周可服务的日期，简化表单填写流程
 
 ### 调整 8：服务回填拆分为两步骤 + 服务专家改为下拉
 

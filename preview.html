@@ -483,9 +483,18 @@
             <span style="width:90px;font-size:14px">城市</span>
             <input style="flex:1;border:none;font-size:14px;outline:none" placeholder="请输入可服务城市" id="si-city">
           </div>
-          <div style="display:flex;align-items:center;min-height:44px;border-bottom:1px solid #eee">
-            <span style="width:90px;font-size:14px">可服务时间</span>
-            <span style="flex:1;font-size:13px;color:#10B981;cursor:pointer" onclick="showPage('servicetime')">前往设置 &rsaquo;</span>
+          <div style="min-height:44px;border-bottom:1px solid #eee;padding:10px 0">
+            <div style="font-size:14px;margin-bottom:8px">可服务时间</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <div class="weekday-chip active" data-day="1" onclick="toggleSettleWeekDay(this)">周一</div>
+              <div class="weekday-chip active" data-day="2" onclick="toggleSettleWeekDay(this)">周二</div>
+              <div class="weekday-chip active" data-day="3" onclick="toggleSettleWeekDay(this)">周三</div>
+              <div class="weekday-chip active" data-day="4" onclick="toggleSettleWeekDay(this)">周四</div>
+              <div class="weekday-chip active" data-day="5" onclick="toggleSettleWeekDay(this)">周五</div>
+              <div class="weekday-chip" data-day="6" onclick="toggleSettleWeekDay(this)">周六</div>
+              <div class="weekday-chip" data-day="0" onclick="toggleSettleWeekDay(this)">周日</div>
+            </div>
+            <div style="font-size:11px;color:#999;margin-top:6px">点击选择每周可服务的日期，支持多选</div>
           </div>
           <div style="padding:10px 0;border-bottom:1px solid #eee">
             <div style="display:flex;justify-content:space-between;margin-bottom:8px">
@@ -888,31 +897,68 @@
         </div>
       </div>
 
-      <!-- 可服务时间设置页 - 周几多选 -->
+      <!-- 可服务时间设置页 - 星期模板 + 日历上下午 -->
       <div id="page-servicetime" class="hidden">
         <div class="page-nav">
           <span class="page-nav-back" onclick="showPage('mine')">&lsaquo;</span>
           可服务时间
         </div>
-        <div style="padding:16px 12px">
-          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:6px">选择每周可服务日期</div>
-          <div style="font-size:12px;color:#999;margin-bottom:16px">点击选中或取消，支持多选</div>
-          <div id="weekday-selector" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px">
-            <div class="weekday-chip active" data-day="1" onclick="toggleWeekDayMulti(this)">周一</div>
-            <div class="weekday-chip active" data-day="2" onclick="toggleWeekDayMulti(this)">周二</div>
-            <div class="weekday-chip active" data-day="3" onclick="toggleWeekDayMulti(this)">周三</div>
-            <div class="weekday-chip active" data-day="4" onclick="toggleWeekDayMulti(this)">周四</div>
-            <div class="weekday-chip active" data-day="5" onclick="toggleWeekDayMulti(this)">周五</div>
-            <div class="weekday-chip" data-day="6" onclick="toggleWeekDayMulti(this)">周六</div>
-            <div class="weekday-chip" data-day="0" onclick="toggleWeekDayMulti(this)">周日</div>
+        <!-- 图例 -->
+        <div style="display:flex;align-items:center;gap:16px;margin:8px 12px 4px;font-size:11px;color:#999">
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#10B981;display:inline-block"></span> 可服务</span>
+          <span style="display:flex;align-items:center;gap:4px"><span style="width:8px;height:8px;border-radius:50%;background:#ccc;display:inline-block"></span> 不可服务</span>
+        </div>
+        <!-- 星期模板栏 -->
+        <div class="card" style="margin:8px 12px;padding:12px 10px">
+          <div style="font-size:12px;font-weight:700;color:#333;margin-bottom:10px">每周默认可服务日</div>
+          <div style="display:flex;justify-content:center;gap:8px">
+            <div class="weekday-chip" data-day="1" onclick="toggleWeekDay(this)">一</div>
+            <div class="weekday-chip" data-day="2" onclick="toggleWeekDay(this)">二</div>
+            <div class="weekday-chip" data-day="3" onclick="toggleWeekDay(this)">三</div>
+            <div class="weekday-chip" data-day="4" onclick="toggleWeekDay(this)">四</div>
+            <div class="weekday-chip" data-day="5" onclick="toggleWeekDay(this)">五</div>
+            <div class="weekday-chip" data-day="6" onclick="toggleWeekDay(this)">六</div>
+            <div class="weekday-chip" data-day="0" onclick="toggleWeekDay(this)">日</div>
           </div>
-          <div style="background:#f0fdf4;border-radius:10px;padding:12px 14px;margin-bottom:16px">
-            <div style="font-size:12px;color:#10B981;font-weight:600;margin-bottom:4px">已选可服务日</div>
-            <div id="selected-days-display" style="font-size:13px;color:#333;line-height:1.6">周一、周二、周三、周四、周五</div>
+        </div>
+        <!-- 月份导航 -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 12px 8px;padding:0 4px">
+          <span style="font-size:18px;color:#333;font-weight:700;cursor:pointer" onclick="changeCalMonth(-1)">&lsaquo;</span>
+          <span id="cal-month-label" style="font-size:16px;font-weight:600;color:#333"></span>
+          <span style="font-size:18px;color:#333;font-weight:700;cursor:pointer" onclick="changeCalMonth(1)">&rsaquo;</span>
+        </div>
+        <!-- 日历 -->
+        <div class="card" style="padding:12px 10px;margin:0 12px">
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;text-align:center;margin-bottom:4px">
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">日</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">一</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">二</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">三</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">四</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">五</div>
+            <div style="font-size:11px;color:#999;font-weight:600;padding:6px 0">六</div>
+          </div>
+          <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;text-align:center"></div>
+        </div>
+        <!-- 选中日期快捷编辑弹层 -->
+        <div id="cal-edit-panel" class="hidden" style="margin:0 12px 12px;border-radius:12px;background:#fff;border:1px solid #e5e7eb;box-shadow:0 4px 12px rgba(0,0,0,0.08)">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px 8px;border-bottom:1px solid #f0f0f0">
+            <span id="cal-edit-date-label" style="font-size:14px;font-weight:700;color:#333"></span>
+            <span style="font-size:18px;color:#999;cursor:pointer" onclick="closeCalEdit()">&times;</span>
+          </div>
+          <div style="padding:10px 14px;display:flex;justify-content:space-around">
+            <div style="text-align:center;cursor:pointer" onclick="toggleEditSlot('am')">
+              <div id="cal-edit-am-dot" style="width:28px;height:28px;border-radius:50%;margin:0 auto 4px;border:2px solid #ccc;background:#fff;transition:all .15s"></div>
+              <div style="font-size:12px;color:#666">上午</div>
+            </div>
+            <div style="text-align:center;cursor:pointer" onclick="toggleEditSlot('pm')">
+              <div id="cal-edit-pm-dot" style="width:28px;height:28px;border-radius:50%;margin:0 auto 4px;border:2px solid #ccc;background:#fff;transition:all .15s"></div>
+              <div style="font-size:12px;color:#666">下午</div>
+            </div>
           </div>
         </div>
         <div style="margin:0 12px 24px">
-          <div class="btn-primary" onclick="saveServiceTimeMulti()">保存</div>
+          <div class="btn-primary" onclick="saveServiceTime()">保存</div>
         </div>
       </div>
     </div>
@@ -1113,7 +1159,7 @@
 
     function switchTab(el) { document.querySelectorAll('.tab-wrap .tab-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); currentTab = parseInt(el.dataset.idx); renderOrders(); }
     function switchNav(el) { document.querySelectorAll('.tabbar-item').forEach(i => i.classList.remove('active')); el.classList.add('active'); currentNav = el.dataset.page; showPage(currentNav); }
-    function showPage(page) { ['service','mine','settings','settlein','sendsms','servicerecord','servicesummary','servicetime','orderdetail','signature','evaluation','signcontract'].forEach(p => document.getElementById('page-'+p).classList.add('hidden')); document.getElementById('page-'+page).classList.remove('hidden'); document.getElementById('screen').scrollTop = 0; }
+    function showPage(page) { ['service','mine','settings','settlein','sendsms','servicerecord','servicesummary','servicetime','orderdetail','signature','evaluation','signcontract'].forEach(p => document.getElementById('page-'+p).classList.add('hidden')); document.getElementById('page-'+page).classList.remove('hidden'); document.getElementById('screen').scrollTop = 0; if (page === 'servicetime' && !calYear) initCalendar(); }
     function showToast(msg) { const t = document.getElementById('toast'); t.innerText = msg; t.classList.remove('hidden'); setTimeout(() => t.classList.add('hidden'), 2000); }
     function showPrivacy() { showModal('隐私协议', '本协议说明我们如何收集、使用和保护您的个人信息。', `<div class="btn-primary" onclick="closeModal()">我知道了</div>`); }
     function showModal(title, body, foot) { document.getElementById('modal-title').innerText = title; document.getElementById('modal-body').innerHTML = body; document.getElementById('modal-foot').innerHTML = foot; document.getElementById('modal-mask').classList.remove('hidden'); document.getElementById('modal').classList.remove('hidden'); }
@@ -1606,35 +1652,166 @@
       }, 3000);
     }
 
-    // ========== 8. 可服务时间设置（周几多选） ==========
-    var weekDayNames = { 0: '周日', 1: '周一', 2: '周二', 3: '周三', 4: '周四', 5: '周五', 6: '周六' };
-    var selectedDays = [1, 2, 3, 4, 5]; // 默认周一至周五
+    // ========== 8. 可服务时间设置（星期模板 + 日历上下午） ==========
+    let calYear, calMonth, calData = {}, calEditDate = null;
+    let weekDefaults = { 1: true, 2: true, 3: true, 4: true, 5: true, 6: false, 0: false };
 
-    function toggleWeekDayMulti(el) {
+    function initCalendar() {
+      var now = new Date();
+      calYear = now.getFullYear();
+      calMonth = now.getMonth();
+      applyWeekDefaultsToMonth(calYear, calMonth);
+      renderWeekChips();
+      renderCalendar();
+    }
+
+    function applyWeekDefaultsToMonth(y, m) {
+      var daysInMonth = new Date(y, m + 1, 0).getDate();
+      for (var d = 1; d <= daysInMonth; d++) {
+        var date = new Date(y, m, d);
+        var dayOfWeek = date.getDay();
+        var key = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+        if (!calData[key]) {
+          calData[key] = weekDefaults[dayOfWeek] ? { am: true, pm: true } : { am: false, pm: false };
+        }
+      }
+    }
+
+    function toggleWeekDay(el) {
       var day = parseInt(el.getAttribute('data-day'));
+      weekDefaults[day] = !weekDefaults[day];
       el.classList.toggle('active');
-      var idx = selectedDays.indexOf(day);
-      if (idx >= 0) {
-        selectedDays.splice(idx, 1);
-      } else {
-        selectedDays.push(day);
+      var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      for (var d = 1; d <= daysInMonth; d++) {
+        var date = new Date(calYear, calMonth, d);
+        if (date.getDay() === day) {
+          var key = calYear + '-' + String(calMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+          calData[key] = weekDefaults[day] ? { am: true, pm: true } : { am: false, pm: false };
+        }
       }
-      updateSelectedDaysDisplay();
+      renderCalendar();
     }
 
-    function updateSelectedDaysDisplay() {
-      var sorted = selectedDays.slice().sort(function(a, b) { return a - b; });
-      var names = sorted.map(function(d) { return weekDayNames[d]; });
-      var display = document.getElementById('selected-days-display');
-      if (display) {
-        display.innerText = names.length > 0 ? names.join('、') : '暂未选择可服务日';
+    function renderWeekChips() {
+      document.querySelectorAll('.weekday-chip').forEach(function(chip) {
+        var day = parseInt(chip.getAttribute('data-day'));
+        if (weekDefaults[day]) chip.classList.add('active');
+        else chip.classList.remove('active');
+      });
+    }
+
+    function changeCalMonth(delta) {
+      calMonth += delta;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      applyWeekDefaultsToMonth(calYear, calMonth);
+      closeCalEdit();
+      renderCalendar();
+    }
+
+    function renderCalendar() {
+      var monthNames = ['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+      document.getElementById('cal-month-label').innerText = calYear + '年 ' + monthNames[calMonth];
+      var grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+      var firstDay = new Date(calYear, calMonth, 1).getDay();
+      var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+      var prevMonthDays = new Date(calYear, calMonth, 0).getDate();
+      var today = new Date();
+      var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+      for (var i = firstDay - 1; i >= 0; i--) {
+        var cell = buildCalCell(prevMonthDays - i, true, false, false, false);
+        grid.appendChild(cell);
+      }
+      for (var d = 1; d <= daysInMonth; d++) {
+        var dateStr = calYear + '-' + String(calMonth + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+        var isToday = (dateStr === todayStr);
+        var data = calData[dateStr] || { am: false, pm: false };
+        var cell = buildCalCell(d, false, isToday, data.am, data.pm);
+        cell.setAttribute('data-date', dateStr);
+        cell.onclick = (function(ds) { return function() { openCalEdit(ds); }; })(dateStr);
+        grid.appendChild(cell);
+      }
+      var totalCells = firstDay + daysInMonth;
+      var remaining = (7 - totalCells % 7) % 7;
+      for (var i = 1; i <= remaining; i++) {
+        var cell = buildCalCell(i, true, false, false, false);
+        grid.appendChild(cell);
       }
     }
 
-    function saveServiceTimeMulti() {
-      if (selectedDays.length === 0) { showToast('请至少选择一个可服务日'); return; }
-      showToast('可服务时间已保存');
+    function buildCalCell(day, isOtherMonth, isToday, amOn, pmOn) {
+      var cell = document.createElement('div');
+      cell.className = 'cal-cell';
+      if (isOtherMonth) cell.classList.add('other-month');
+      if (isToday) cell.classList.add('today');
+      var daySpan = document.createElement('span');
+      daySpan.className = 'cal-day';
+      daySpan.innerText = day;
+      cell.appendChild(daySpan);
+      if (!isOtherMonth) {
+        var dotsDiv = document.createElement('div');
+        dotsDiv.className = 'cal-dots';
+        var amDot = document.createElement('span');
+        amDot.className = 'cal-dot ' + (amOn ? 'on' : 'off');
+        dotsDiv.appendChild(amDot);
+        var pmDot = document.createElement('span');
+        pmDot.className = 'cal-dot ' + (pmOn ? 'on' : 'off');
+        dotsDiv.appendChild(pmDot);
+        cell.appendChild(dotsDiv);
+      }
+      return cell;
+    }
+
+    function openCalEdit(dateStr) {
+      calEditDate = dateStr;
+      var label = document.getElementById('cal-edit-date-label');
+      var parts = dateStr.split('-');
+      var m = parseInt(parts[1]);
+      var d = parseInt(parts[2]);
+      var dayNames = ['周日','周一','周二','周三','周四','周五','周六'];
+      var dt = new Date(parseInt(parts[0]), m - 1, d);
+      label.innerText = m + '月' + d + '日 ' + dayNames[dt.getDay()];
+      var data = calData[dateStr] || { am: false, pm: false };
+      updateEditDots(data.am, data.pm);
+      document.getElementById('cal-edit-panel').classList.remove('hidden');
+    }
+
+    function closeCalEdit() {
+      calEditDate = null;
+      document.getElementById('cal-edit-panel').classList.add('hidden');
+    }
+
+    function updateEditDots(amOn, pmOn) {
+      var amDot = document.getElementById('cal-edit-am-dot');
+      var pmDot = document.getElementById('cal-edit-pm-dot');
+      amDot.style.background = amOn ? '#10B981' : '#fff';
+      amDot.style.borderColor = amOn ? '#10B981' : '#ccc';
+      pmDot.style.background = pmOn ? '#10B981' : '#fff';
+      pmDot.style.borderColor = pmOn ? '#10B981' : '#ccc';
+    }
+
+    function toggleEditSlot(slot) {
+      if (!calEditDate) return;
+      var data = calData[calEditDate] || { am: false, pm: false };
+      data[slot] = !data[slot];
+      calData[calEditDate] = data;
+      updateEditDots(data.am, data.pm);
+      renderCalendar();
+    }
+
+    function saveServiceTime() {
+      var count = 0;
+      Object.keys(calData).forEach(function(k) {
+        if (calData[k].am || calData[k].pm) count++;
+      });
+      showToast('可服务时间已保存（' + count + '天）');
       setTimeout(function() { showPage('mine'); }, 1000);
+    }
+
+    // ========== 入驻表单-可服务时间周几多选 ==========
+    function toggleSettleWeekDay(el) {
+      el.classList.toggle('active');
     }
 
     // ========== 9. 发送短信页面相关 ==========
