@@ -389,7 +389,7 @@
             <div class="step-line"></div>
             <div class="step"><div class="step-dot" id="step-audit"></div><span>审核通过</span></div>
             <div class="step-line"></div>
-            <div class="step"><div class="step-dot" id="step-sign"></div><span>在线签署</span></div>
+            <div class="step"><div class="step-dot" id="step-sign" style="cursor:pointer" onclick="showPage('signcontract')"></div><span style="cursor:pointer;color:#10B981" onclick="showPage('signcontract')">在线签署</span></div>
             <div class="step-line"></div>
             <div class="step"><div class="step-dot" id="step-done"></div><span>入驻通过</span></div>
           </div>
@@ -831,33 +831,70 @@
             <span style="font-size:13px;color:#333">电子签章</span>
           </div>
         </div>
-        <!-- 合同预览 -->
+        <!-- 合同正文 - 可展开/收起 -->
         <div class="card" style="margin:0 12px 12px;padding:14px 16px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-            <span style="font-size:14px;font-weight:700;color:#333">合同正文</span>
-            <span style="font-size:12px;color:#10B981;cursor:pointer" onclick="showModal('合同正文','此处为陪诊师入驻服务协议全文预览...','<div class=\\'btn-primary\\' onclick=\\'closeModal()\\'>我知道了</div>')">查看全文 &rsaquo;</span>
+            <span style="font-size:14px;font-weight:700;color:#333">入驻合同正文</span>
+            <span id="contract-toggle-btn" style="font-size:12px;color:#10B981;cursor:pointer;display:flex;align-items:center;gap:2px" onclick="toggleContractFull()">查看全文 <span style="font-size:10px">&#9662;</span></span>
           </div>
-          <div style="font-size:12px;color:#999;line-height:1.8;max-height:120px;overflow-y:auto;background:#f9fafb;padding:10px;border-radius:8px">
+          <!-- 合同摘要（默认显示） -->
+          <div id="contract-summary" style="font-size:12px;color:#999;line-height:1.8;background:#f9fafb;padding:10px;border-radius:8px">
             第一条 服务范围：陪诊师为平台用户提供就医陪同、代办跑腿、取报告等服务。<br>
             第二条 服务规范：陪诊师应准时到达、着装整洁、态度专业。<br>
             第三条 收费标准：按照平台统一定价执行，陪诊师不得私下收费。<br>
-            第四条 保密义务：陪诊师对患者信息负有保密义务。<br>
-            第五条 违约责任：如违反协议约定，平台有权终止合作。<br>
-            ... <span style="color:#10B981;cursor:pointer" onclick="showModal('合同正文','此处为陪诊师入驻服务协议全文预览...','<div class=\\'btn-primary\\' onclick=\\'closeModal()\\'>我知道了</div>')">展开全文</span>
+            ... <span style="color:#10B981;cursor:pointer" onclick="toggleContractFull()">展开全文</span>
+          </div>
+          <!-- 合同全文（默认隐藏） -->
+          <div id="contract-full" class="hidden" style="font-size:12px;color:#666;line-height:1.9;background:#f9fafb;padding:12px;border-radius:8px;max-height:300px;overflow-y:auto">
+            <div style="font-weight:700;color:#333;font-size:14px;text-align:center;margin-bottom:12px">康元方舟陪诊师入驻服务协议</div>
+            <p style="margin-bottom:8px"><b>甲方：</b>康元方舟健康科技有限公司（以下简称"平台"）</p>
+            <p style="margin-bottom:8px"><b>乙方：</b>陪诊师（以下简称"陪诊师"）</p>
+            <p style="margin-bottom:8px">根据《中华人民共和国民法典》及相关法律法规，甲乙双方在平等、自愿的基础上，就陪诊师入驻平台事宜达成如下协议：</p>
+            <p style="margin-bottom:6px;color:#333;font-weight:600">第一条 服务范围</p>
+            <p style="margin-bottom:8px">1.1 陪诊师为平台用户提供就医陪同、代办跑腿、取报告等服务。</p>
+            <p style="margin-bottom:8px">1.2 陪诊师应按照平台订单要求，提供专业、规范的陪诊服务。</p>
+            <p style="margin-bottom:6px;color:#333;font-weight:600">第二条 服务规范</p>
+            <p style="margin-bottom:8px">2.1 陪诊师应准时到达约定地点，着装整洁，态度专业。</p>
+            <p style="margin-bottom:8px">2.2 陪诊师应遵守医院相关规定，不得影响正常就医秩序。</p>
+            <p style="margin-bottom:8px">2.3 陪诊师应保护患者隐私，不得泄露患者个人信息。</p>
+            <p style="margin-bottom:6px;color:#333;font-weight:600">第三条 收费标准</p>
+            <p style="margin-bottom:8px">3.1 按照平台统一定价执行，陪诊师不得私下收费或收取额外费用。</p>
+            <p style="margin-bottom:8px">3.2 平台每月15日结算上月服务费用，扣除平台服务费后支付给陪诊师。</p>
+            <p style="margin-bottom:6px;color:#333;font-weight:600">第四条 保密义务</p>
+            <p style="margin-bottom:8px">4.1 陪诊师对患者信息负有保密义务，不得向第三方透露。</p>
+            <p style="margin-bottom:8px">4.2 保密期限自服务开始起至协议终止后3年。</p>
+            <p style="margin-bottom:6px;color:#333;font-weight:600">第五条 违约责任</p>
+            <p style="margin-bottom:8px">5.1 如陪诊师违反本协议约定，平台有权终止合作并要求赔偿损失。</p>
+            <p style="margin-bottom:8px">5.2 陪诊师私下收费的，平台有权立即解除协议。</p>
+            <p style="margin-bottom:6px;color:#333;font-weight:600">第六条 协议期限</p>
+            <p style="margin-bottom:8px">6.1 本协议有效期为1年，自签署之日起生效。</p>
+            <p style="margin-bottom:8px">6.2 协议到期前30日，双方可协商续签。</p>
+            <p style="margin-bottom:6px;color:#333;font-weight:600">第七条 争议解决</p>
+            <p style="margin-bottom:8px">7.1 本协议履行过程中发生争议，双方应友好协商解决。</p>
+            <p style="margin-bottom:8px">7.2 协商不成的，可向平台所在地人民法院提起诉讼。</p>
+            <p style="margin-bottom:8px">7.3 本协议一式两份，甲乙双方各执一份，具有同等法律效力。</p>
+            <p style="text-align:right;color:#999;margin-top:12px">康元方舟健康科技有限公司<br>2026年7月15日</p>
           </div>
         </div>
         <!-- 签字区域 -->
         <div class="card" style="margin:0 12px 12px;padding:14px 16px">
-          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:10px">签字签署</div>
-          <div style="font-size:12px;color:#999;margin-bottom:8px">请在下方区域签字确认</div>
-          <div id="contract-sign-area" style="width:100%;height:140px;border:2px dashed #d1d5db;border-radius:8px;background:#fafafa;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden" onclick="signContract(this)">
-            <span style="font-size:13px;color:#bbb">点击此处签字</span>
+          <div style="font-size:14px;font-weight:700;color:#333;margin-bottom:10px">授权签字</div>
+          <div style="font-size:12px;color:#999;margin-bottom:8px">请在下方区域手写签名，完成授权签署</div>
+          <div id="contract-sign-area" style="width:100%;height:160px;border:2px dashed #d1d5db;border-radius:8px;background:#fafafa;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden" onclick="signContract(this)">
+            <div style="text-align:center">
+              <svg viewBox="0 0 24 24" style="width:32px;height:32px;fill:#bbb;margin:0 auto 6px"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 00-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              <span style="font-size:13px;color:#bbb;display:block">点击此处签字</span>
+            </div>
+          </div>
+          <div id="contract-sign-tip" class="hidden" style="margin-top:8px;padding:8px 12px;background:#f0fdf4;border-radius:8px;display:flex;align-items:center;gap:8px">
+            <svg viewBox="0 0 24 24" style="width:18px;height:18px;fill:#10B981"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
+            <span style="font-size:13px;color:#10B981">签字完成，请在下方确认签署</span>
           </div>
         </div>
         <!-- 同意条款 -->
-        <div style="display:flex;align-items:center;margin:12px 12px;font-size:12px;color:#666">
-          <input type="checkbox" id="contract-agree" style="margin-right:6px;accent-color:#10B981">
-          <span>我已阅读并同意</span><span style="color:#10B981;cursor:pointer" onclick="showModal('合同正文','此处为陪诊师入驻服务协议全文预览...','<div class=\\'btn-primary\\' onclick=\\'closeModal()\\'>我知道了</div>')">《陪诊师入驻服务协议》</span>
+        <div style="display:flex;align-items:flex-start;margin:12px 12px;font-size:12px;color:#666">
+          <input type="checkbox" id="contract-agree" style="margin-right:6px;margin-top:2px;accent-color:#10B981">
+          <span>我已认真阅读并同意<a style="color:#10B981;cursor:pointer" onclick="toggleContractFull()">《陪诊师入驻服务协议》</a>全部内容</span>
         </div>
         <div style="margin:12px 12px 24px">
           <div class="btn-primary" onclick="confirmContract()">确认签署并入驻</div>
@@ -1416,13 +1453,31 @@
 
     // ========== 电子合同签署 ==========
     var contractSigned = false;
+    var contractExpanded = false;
+
+    function toggleContractFull() {
+      contractExpanded = !contractExpanded;
+      var summary = document.getElementById('contract-summary');
+      var full = document.getElementById('contract-full');
+      var btn = document.getElementById('contract-toggle-btn');
+      if (contractExpanded) {
+        summary.classList.add('hidden');
+        full.classList.remove('hidden');
+        btn.innerHTML = '收起 <span style="font-size:10px">&#9652;</span>';
+      } else {
+        summary.classList.remove('hidden');
+        full.classList.add('hidden');
+        btn.innerHTML = '查看全文 <span style="font-size:10px">&#9662;</span>';
+      }
+    }
 
     function signContract(el) {
       if (contractSigned) return;
       contractSigned = true;
-      el.innerHTML = '<svg viewBox="0 0 200 80" style="width:100%;height:100%"><path d="M20,50 Q40,20 60,40 T100,45 Q130,25 160,50" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
+      el.innerHTML = '<svg viewBox="0 0 200 80" style="width:100%;height:100%"><path d="M20,55 Q35,25 55,45 T95,50 Q125,30 155,50 L175,45" stroke="#333" stroke-width="2" fill="none" stroke-linecap="round"/><path d="M40,60 Q60,55 80,58" stroke="#333" stroke-width="1.5" fill="none" stroke-linecap="round" opacity="0.6"/></svg>';
       el.style.background = '#fff';
       el.style.borderColor = '#10B981';
+      document.getElementById('contract-sign-tip').classList.remove('hidden');
       showToast('签字完成');
     }
 
